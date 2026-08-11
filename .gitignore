@@ -1,0 +1,118 @@
+# ==========================================
+# 1. OS & IDEs (بيئة العمل والمحررات)
+# ==========================================
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+*.stackdump
+
+# Visual Studio & VS Code
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains / Rider / WebStorm
+.idea/
+*.sln.docstates
+
+# ==========================================
+# 2. Next.js & Node.js (الواجهة الأمامية)
+# ==========================================
+# Dependencies (في أي مجلد فرعي)
+**/node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Next.js Build Outputs (في أي مجلد فرعي)
+**/.next/
+**/out/
+**/build/
+**/dist/
+
+# Debug & Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+**/coverage/
+
+# Vercel & TypeScript
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+
+# ==========================================
+# 3. ASP.NET Core API (الخلفية - C# / .NET)
+# ==========================================
+# Build & Publish outputs (في أي مجلد فرعي)
+**/[Bb]in/
+**/[Oo]bj/
+**/[Ll]og/
+**/[Ll]ogs/
+**/publish/
+**/published/
+
+# Visual Studio user specific files
+*.user
+*.userosscache
+*.suo
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+**/packages/
+project.lock.json
+project.assets.json
+
+# Local databases & Temp files
+*.db
+*.sqlite
+*.sqlite-journal
+*.mdf
+*.ldf
+*.tmp
+
+# EF Core / Compilation Temp Files
+*_wpftmp.csproj
+*.ilk
+*.pdb
+*.meta
+
+# ==========================================
+# 4. Environment Variables & Secrets (الحماية)
+# ==========================================
+# Next.js Secrets (في جميع المجلدات الفرعية)
+**/.env
+**/.env*.local
+!**/.env.example
+
+# ASP.NET Core Local Secrets
+**/appsettings.Local.json
+**/appsettings.*.Local.json
+**/appsettings.Development.json
+
+# SSL Certificates & Keys
+*.pem
+*.pfx
+*.crt
+*.key
+
+# ==========================================
+# 4. Images & Logos (الصور والشعارات)
+# ==========================================
+# SVG Files 
+*.svg
+**/*.svg
