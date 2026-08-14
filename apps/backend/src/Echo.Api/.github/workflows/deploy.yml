@@ -1,0 +1,34 @@
+name: Deploy to MonsterASP
+
+on:
+  push:
+    branches: [ main ]  
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x' 
+
+      - name: Publish project
+        run: dotnet publish -c Release -o ./publish
+
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Deploy via FTP
+        run: |
+          lftp -c "
+          set ssl:verify-certificate no
+          open ftp://echo.runasp.net
+          user '${{ secrets.FTP_USERNAME }}' '${{ secrets.FTP_PASSWORD }}'
+          mirror -R --delete --verbose ./publish /site/wwwroot
+          bye
+          "
