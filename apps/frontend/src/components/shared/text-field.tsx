@@ -1,5 +1,16 @@
+import { LucideIcon } from "lucide-react";
 
-export default function TextField({ label, name, icon: Icon, type = "text", placeholder, value, onChange, required }) {
+interface TextFieldProps {
+  label: string;
+  name: string;
+  icon?: LucideIcon;
+  type?: string;
+  placeholder?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  required?: boolean;
+}
+export default function TextField({ label, name, icon: Icon, type = "text", placeholder, value, onChange, required } : TextFieldProps) {
   return (
     <div className="mb-4">
       <label className="mb-1.5 block text-xs text-muted-foreground">{label}</label>

@@ -26,8 +26,7 @@ export function LoginForm({ className }: LoginFormProps) {
     email: "",
     pass: "",
   });
-
-  const router = useRouter();
+  
   const [error, setError] = useState("");
   const { mutateAsync: loginAsync, isPending } = useLoginUserCommand();
   const queryClient = useQueryClient();
@@ -50,7 +49,7 @@ export function LoginForm({ className }: LoginFormProps) {
       } else {
 
         await queryClient.invalidateQueries();
-        router.push(chatPagesPaths.chat);
+        window.location.href = "/chat"
 
       }
     } catch {

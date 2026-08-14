@@ -1,5 +1,6 @@
 import {
   useInfiniteQuery,
+  useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -7,6 +8,7 @@ import { ChatServices } from "./chat-service";
 import { ChatKeys } from "./chat-keys";
 import {
   ConversationMessagesResponse,
+  CreateConversationRequest,
   getConversationMessagesRequest,
   SingleConversationMessage,
 } from "./types";
@@ -14,8 +16,13 @@ import {
 export const useGetUserConversations = (userId: string) => {
   return useQuery({
     queryFn: ChatServices.getUserConversations,
-    queryKey: ChatKeys.UserConversations(userId),
+    queryKey: ChatKeys.UserConversations,
     enabled: !!userId,
+    gcTime: 15 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 };
 
@@ -23,7 +30,7 @@ export function useGetConversationMessages(conversationId: string) {
   const PAGE_SIZE = 20;
 
   return useInfiniteQuery({
-    queryKey: ["messages", conversationId],
+    queryKey: ChatKeys.ConversationMessages(conversationId),
 
     queryFn: async ({ pageParam }) => {
       const query: getConversationMessagesRequest = {
@@ -47,7 +54,7 @@ export function useGetConversationMessages(conversationId: string) {
         return undefined;
       }
 
-      const oldestMessage = lastPage[lastPage.length - 1];
+      const oldestMessage = lastPage[0];
 
       return oldestMessage.id;
     },
@@ -61,5 +68,16 @@ export const useGetConversationDetails = (conversationId: string) => {
     queryFn: () => ChatServices.getConversationDetails(conversationId),
     queryKey: ChatKeys.ConversationDetails(conversationId),
     enabled: !!conversationId,
+  });
+};
+
+export const useCreateConversation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: CreateConversationRequest) =>
+      ChatServices.createConversation(request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ChatKeys.UserConversations });
+    }
   });
 };

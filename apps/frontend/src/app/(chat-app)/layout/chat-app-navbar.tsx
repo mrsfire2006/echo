@@ -1,8 +1,10 @@
 'use client'
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useLogoutUserCommand } from "@/features/auth/hooks";
 import { CircleUserRound, LogOut, MessageCircleMore, Settings } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Fragment } from "react/jsx-runtime";
 
 const navLinks = [
@@ -13,9 +15,11 @@ const navLinks = [
 
 export default function ChatAppNavbar() {
     const pathname = usePathname();
-
+    const isChatDetails = pathname.startsWith('/chat/') && pathname !== '/chat/';
+    const { mutateAsync: Logout } = useLogoutUserCommand();
+    const router = useRouter();
     return (
-        <nav className="
+        <nav className={`
                 
         shrink-0
         border-sidebar-border
@@ -33,7 +37,8 @@ export default function ChatAppNavbar() {
           left-1/2 -translate-x-1/2
         absolute
         z-10
-         /* Desktop */
+        ${isChatDetails ? "hidden md:flex" : "grid"}
+          /* Desktop */
  
         md:flex
         md:h-auto
@@ -50,7 +55,7 @@ export default function ChatAppNavbar() {
             md:translate-x-0
     md:left-auto
         md:my-0
-        ">
+        `}>
             <div className=" col-span-3
           grid
           grid-cols-[1fr_auto_1fr_auto_1fr]
@@ -93,12 +98,18 @@ export default function ChatAppNavbar() {
                 })}
             </div>
 
-            <Link
-                href="/"
-                className="hidden  md:flex h-11 w-11 items-center justify-center rounded-xl text-sidebar-foreground/50 transition-colors hover:bg-destructive/10 hover:text-destructive"
+            <Button
+                onClick={async () => {
+                    const result = await Logout();
+                    if (result.isSuccess) {
+
+                        router.push("/")
+                    }
+                }}
+                className="hidden bg-transparent  md:flex h-11 w-11 items-center justify-center rounded-xl text-sidebar-foreground/50 transition-colors hover:bg-destructive/10 hover:text-destructive"
             >
                 <LogOut className="h-5 w-5" strokeWidth={2} />
-            </Link>
+            </Button>
         </nav>
     );
 }

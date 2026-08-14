@@ -7,8 +7,8 @@ namespace Echo.Api.Features.Chat.Dtos.Responses
 {
     public record ChatMessageResponse(
         Guid Id,
-        Guid ConversationId,
         Guid SenderId,
+        Guid ConversationId,
         string Content,
         DateTime CreatedAt
     );

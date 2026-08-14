@@ -7,16 +7,21 @@ import { usePathname } from "next/navigation";
 import { formatMessageTime } from "@/constants";
 import UserAvatar from "@/features/user/components/user-avatar";
 import { cn } from "@/lib/utils";
+import usePresence from "../../chat-hooks/use-presence";
+import { useCurrentConversation } from "../providers/current-conversation-provider";
 
 
 
 
 export default function ChatNavbar() {
     const { data: user } = useGetUserProfile();
-
+    const presence = usePresence();
     const pathname = usePathname();
     const { data: conversations, isPending } = useGetUserConversations(user?.value?.id ?? "");
-
+    const { setCurrentConversation } = useCurrentConversation();
+    const convs = conversations && conversations?.value?.sort((a, b) =>
+        new Date(b.lastMessageTime!).getTime() - new Date(a.lastMessageTime!).getTime()
+    );
     return (
         <nav className="min-h-0 flex-1  overflow-y-auto px-3 mt-3 scrollbar-thin [scrollbar-color:var(--border)_transparent]">
 
@@ -24,8 +29,12 @@ export default function ChatNavbar() {
                 <p className="text-center text-foreground"> No Conversations</p>
             )}
             <div className="flex flex-col gap-1.5">
-                {conversations && conversations.value?.map((c) => (
-                    <Link
+                {convs && convs.map((c) => {
+                    const isOnline = presence.onlineUsers?.includes(c.userId);
+                    return <Link
+                        onClick={() => {
+                            setCurrentConversation({ conversationId: c.conversationId, isOnline, otherUserId: c.userId, username: c.username })
+                        }}
                         data-selected={pathname.includes(c.conversationId)}
                         key={c.conversationId}
                         href={`/chat/${c.conversationId}`}
@@ -35,7 +44,7 @@ export default function ChatNavbar() {
                             "overflow-hidden"
                         )}
                     >
-                        <UserAvatar onLine id={c.conversationId} name={c.username} />
+                        <UserAvatar onLine={isOnline} username={c.username} />
 
                         <div className="flex flex-col min-w-0 justify-center gap-0.5">
                             <span className="font-semibold text-sm text-foreground truncate">
@@ -58,7 +67,7 @@ export default function ChatNavbar() {
                             )}
                         </div>
                     </Link>
-                ))}
+                })}
             </div>
         </nav>
     )

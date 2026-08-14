@@ -57,7 +57,6 @@ CancellationToken cancellationToken)
 
         [HttpPost("refresh")]
         [ProducesResponseType(typeof(HttpResult), StatusCodes.Status200OK)]
-
         public async Task<IActionResult> Refresh(
             CancellationToken cancellationToken)
         {
@@ -71,10 +70,22 @@ CancellationToken cancellationToken)
             }
 
             var command = new RefreshTokenRequest(refreshToken);
-
             var result = await _service.Refresh(command, cancellationToken);
 
             return HandleResult(result);
         }
+        [HttpPost("logout")]
+        [ProducesResponseType(typeof(HttpResult), StatusCodes.Status200OK)]
+
+        public async Task<IActionResult> Logout(
+            CancellationToken cancellationToken)
+        {
+            var refreshToken = Request.Cookies["refresh_token"];
+
+            var result = await _service.LogOut(refreshToken, cancellationToken);
+
+            return HandleResult(result);
+        }
+
     }
 }

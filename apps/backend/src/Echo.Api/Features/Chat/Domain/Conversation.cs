@@ -15,6 +15,7 @@ namespace Echo.Api.Features.Chat.Domain.Entities
 
         public DateTime CreatedAt { get; private set; }
 
+        public Guid? LastMessageId { get; private set; }
         public string? LastMessagePreview { get; private set; }
         public DateTime? LastMessageAt { get; private set; }
         public Guid? LastMessageSenderId { get; private set; }
@@ -40,18 +41,25 @@ namespace Echo.Api.Features.Chat.Domain.Entities
             _members.Add(member);
         }
 
-        public void MarkMessageAsRead(Guid userId, Guid messageId)
+        public void MarkAsRead(Guid userId)
         {
             var member = _members.FirstOrDefault(m => m.UserId == userId);
-  
-            member!.MarkAsRead(messageId);
-        }
+            if (member == null)
+            {
+                return;
+            }
 
+            if (LastMessageId.HasValue && LastMessageSenderId != userId)
+            {
+                member.MarkAsRead(LastMessageId.Value);
+            }
+        }
         public Message AddMessage(Guid senderId, string content)
         {
             var isMember = _members.Any(m => m.UserId == senderId);
-            if (!isMember)
-                throw new InvalidOperationException("Sender must be a member of the conversation.");
+
+
+
 
             var message = Message.Create(Id, senderId, content);
             _messages.Add(message);
@@ -59,6 +67,7 @@ namespace Echo.Api.Features.Chat.Domain.Entities
             LastMessagePreview = content.Length > 100 ? content[..100] : content;
             LastMessageAt = message.CreatedAt;
             LastMessageSenderId = senderId;
+            LastMessageId = message.Id;
 
             return message;
         }

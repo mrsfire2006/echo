@@ -9,6 +9,7 @@ namespace Echo.Api.Features.Chat.Dtos.Responses
 
     public record UserConversationResponse(
         Guid ConversationId,
+        Guid UserId,
         string Username,
         string lastMessage,
         int unReadMessage,

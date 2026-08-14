@@ -18,3 +18,7 @@ export type SingleConversationMessage =
 
 export type ConversationDetailsResponse =
   ApiSchema["HttpResultOfConversationDetailsResponse"]["value"];
+
+export type CreateConversationRequest =
+  ApiSchema["GetOrCreateConversationRequest"];
+

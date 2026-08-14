@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Echo.Api.Features;
 using Echo.Api.Features.Auth.Common;
+using Echo.Api.Features.Chat.ChatHubServices;
 using Echo.Api.Features.Shared.Infrastructure.Persistence;
 using Echo.Api.Shared.Pipelines;
 using FluentValidation;
@@ -27,6 +28,7 @@ namespace Echo.Api.Shared
             AddAuthorization(services);
 
             AddSingalR(services);
+            services.AddSingleton<PresenceTracker>();
 
             services.AddTransient(typeof(ValidationBehavior<,>));
             services.AddValidatorsFromAssemblyContaining<FeaturesMarker>();

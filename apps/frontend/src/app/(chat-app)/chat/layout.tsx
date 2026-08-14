@@ -20,8 +20,8 @@ export default function ChatLayout({
             <aside
                 className={cn("border-r border-border bg-sidebar",
                     "min-w-0 overflow-hidden transition-[flex-basis] duration-100  ",
-                    isConversationOpen  
-                        ? "basis-0"
+                    isConversationOpen
+                        ? "basis-0 "
                         : "basis-full",
                     "md:basis-[320px]"
                 )}
@@ -34,10 +34,10 @@ export default function ChatLayout({
             {/* Content */}
             <section
                 className={cn(
-                    "min-w-0 overflow-hidden transition-[flex-basis] duration-100",
+                    "min-w-0 overflow-hidden md:opacity-100 transition-[flex-basis] duration-100",
                     isConversationOpen
-                        ? "basis-full"
-                        : "basis-0",
+                        ? "basis-full opacity-100"
+                        : "basis-0  opacity-0",
                     "md:basis-auto md:flex-1"
                 )}
             >

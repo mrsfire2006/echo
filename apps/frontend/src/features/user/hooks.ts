@@ -8,3 +8,12 @@ export const useGetUserProfile = () => {
     queryKey: UserKeys.userprofile,
   });
 };
+
+export const useGetUsers = (username: string) => {
+  return useQuery({
+    queryFn: () => UserServices.GetUsers(username),
+    queryKey: UserKeys.users(username),
+    enabled: !!username,
+    retry: false,
+  });
+};

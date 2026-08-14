@@ -1,5 +1,5 @@
 import { clientFetch } from "@/lib/client/api-client";
-import { UserProfileResponse } from "./types";
+import { UserProfileResponse, UsersResponse } from "./types";
 import { userApiPaths } from "./paths";
 
 export const UserServices = {
@@ -9,6 +9,14 @@ export const UserServices = {
       {
         method: "GET",
       },
+    );
+    return result;
+  },
+  GetUsers: async (username: string) => {
+    const params = new URLSearchParams();
+    params.append("Username", username);
+    const result = await clientFetch<UsersResponse>(
+      `${userApiPaths.getUsers}?${params.toString()}`,
     );
     return result;
   },

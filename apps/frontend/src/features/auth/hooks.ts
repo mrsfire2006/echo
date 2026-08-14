@@ -14,3 +14,9 @@ export const useRegisterUserCommand = () => {
     mutationFn: AuthServices.registerAsync,
   });
 };
+
+export const useLogoutUserCommand = () =>{
+  return useMutation({
+    mutationFn:AuthServices.logoutAsync
+  })
+}

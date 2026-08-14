@@ -4,18 +4,20 @@ import { Button } from "@/components/ui/button";
 import UserAvatar from "@/features/user/components/user-avatar";
 import { ChevronLeft, EllipsisVertical, Phone, Video } from "lucide-react";
 import Link from "next/link";
+import { useCurrentConversation } from "../providers/current-conversation-provider";
 
-interface ConversationHeaderProps {
-    username: string;
-    conversationId: string;
-    onLine: boolean;
-}
 
-export default function ConversationHeader({ username, conversationId, onLine }: ConversationHeaderProps) {
+
+export default function ConversationHeader() {
+    const { clearCurrentConversation, currentConversation } = useCurrentConversation();
+
     return (
         <header className="sticky top-0 z-10 flex h-16 w-full items-center justify-between border-b border-border/60 bg-background/80 px-4 py-2 backdrop-blur-md transition-colors">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <Button
+                    onClick={() => {
+                        clearCurrentConversation();
+                    }}
                     variant="ghost"
                     size="icon"
                     asChild
@@ -25,19 +27,28 @@ export default function ConversationHeader({ username, conversationId, onLine }:
                         <ChevronLeft className="h-5 w-5" />
                     </Link>
                 </Button>
-
                 <div className="flex items-center gap-3 min-w-0 cursor-pointer">
-                    <UserAvatar onLine={onLine} id={conversationId} name={username} className="h-10 w-10 shrink-0" />
+                    <UserAvatar onLine={currentConversation?.isOnline} username={currentConversation?.username ?? "user"} className="h-10 w-10 shrink-0" />
 
                     <div className="flex flex-col min-w-0 justify-center">
                         <h3 className="text-sm font-semibold text-foreground truncate leading-tight">
-                            {username}
+                            {currentConversation?.username ?? "User"}
                         </h3>
 
-                        <div className="flex items-center gap-1.5 mt-0.5">
-
-                            <span className={`text-xs ${onLine ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-muted-foreground"}`}>
-                                {onLine ? "Online" : "Offline"}
+                        <div className={`flex items-center gap-1.5 mt-0.5`}>
+                            <span
+                                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors ${currentConversation?.isOnline
+                                    ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+                                    : "bg-muted text-muted-foreground"
+                                    }`}
+                            >
+                                <span
+                                    className={`h-1.5 w-1.5 rounded-full ${currentConversation?.isOnline
+                                        ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.7)]"
+                                        : "bg-muted-foreground/50"
+                                        }`}
+                                />
+                                {currentConversation?.isOnline ? "Online" : "Offline"}
                             </span>
                         </div>
                     </div>

@@ -2,6 +2,7 @@ import { clientFetch } from "@/lib/client/api-client";
 import {
   ConversationDetailsResponse,
   ConversationMessagesResponse,
+  CreateConversationRequest,
   getConversationMessagesRequest,
   UserConversationsResponse,
 } from "./types";
@@ -35,6 +36,16 @@ export const ChatServices = {
       `${chatApiPaths.getConversationDetails}/:${conversationId}`,
       {
         method: "GET",
+      },
+    );
+    return result;
+  },
+  createConversation: async (request: CreateConversationRequest) => {
+    const result = await clientFetch<string>(
+      `${chatApiPaths.createConversation}`,
+      {
+        method: "POST",
+        body: JSON.stringify(request),
       },
     );
     return result;

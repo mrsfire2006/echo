@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Echo.Api.Features.Chat.Domain.Entities;
+using Echo.Api.Features.Users.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -15,6 +16,8 @@ namespace Echo.Api.Features.Chat.Configurations
 
             builder.HasIndex(m => new { m.ConversationId, m.UserId })
                   .IsUnique();
+
+
         }
     }
 }

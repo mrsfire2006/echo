@@ -32,5 +32,24 @@ namespace Echo.Api.Features.Auth.Common
                 Expires = DateTimeOffset.UtcNow.AddDays(7)
             });
         }
+        public static void RemoveAuthCookies(IHttpContextAccessor httpContextAccessor)
+        {
+            var response = httpContextAccessor.HttpContext?.Response;
+
+            if (response is null)
+            {
+                return;
+            }
+
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict
+            };
+
+            response.Cookies.Delete("access_token", cookieOptions);
+            response.Cookies.Delete("refresh_token", cookieOptions);
+        }
     }
 }

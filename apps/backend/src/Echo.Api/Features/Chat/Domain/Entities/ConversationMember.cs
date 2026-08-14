@@ -35,8 +35,7 @@ namespace Echo.Api.Features.Chat.Domain.Entities
 
         public void MarkAsRead(Guid messageId)
         {
-            if (messageId == Guid.Empty)
-                throw new ArgumentException("Message ID cannot be empty.", nameof(messageId));
+            
 
             LastReadMessageId = messageId;
             LastReadAt = DateTime.UtcNow;

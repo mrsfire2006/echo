@@ -71,11 +71,15 @@ namespace Echo.Api.Features.Chat
         }
 
 
-        public async Task<HttpResult<IEnumerable<UserConversationResponse>>> GetUserConversationsAsync(GetUserConversationsRequest query, CancellationToken cancellationToken)
+        public async Task<HttpResult<IEnumerable<UserConversationResponse>>> GetUserConversationsAsync(
+            GetUserConversationsRequest query,
+            CancellationToken cancellationToken)
         {
             var conversations = await (
                 from c in _context.Conversations
                 where c.Members.Any(m => m.UserId == query.UserId)
+
+                let currentMember = c.Members.FirstOrDefault(m => m.UserId == query.UserId)
 
                 let otherUserId = c.Members
                    .Where(m => m.UserId != query.UserId)
@@ -88,16 +92,18 @@ namespace Echo.Api.Features.Chat
 
                 select new UserConversationResponse(
                     c.Id,
+                    u.Id,
                     u.Username,
                     c.LastMessagePreview ?? string.Empty,
 
-                    c.Messages.Count(m => m.SenderId != query.UserId
-                                  && m.ReadAt == null),
+                    c.Messages.Count(m =>
+                        m.SenderId != query.UserId &&
+                        (currentMember.LastReadAt == null || m.CreatedAt > currentMember.LastReadAt)
+                    ),
 
-                    c.LastMessageAt ?? null
+                    c.LastMessageAt
                 )
             ).ToListAsync(cancellationToken);
-
 
             return HttpResult<IEnumerable<UserConversationResponse>>.Success(conversations);
         }
@@ -110,7 +116,8 @@ namespace Echo.Api.Features.Chat
                     "You cannot send a message to yourself.");
             }
             var conversation = await _context.Conversations
-                    .Include(c => c.Members)
+                    .Include(x => x.Members)
+                    .Include(c => c.Messages)
                     .FirstOrDefaultAsync(c => c.Id == request.ConversationId && c.Members.Any(m => m.UserId == request.SenderId) && c.Members.Any(m => m.UserId == request.ReceiverId));
 
             if (conversation == null)
@@ -124,8 +131,8 @@ namespace Echo.Api.Features.Chat
 
             var response = new ChatMessageResponse(
                messageEntity.Id,
-               conversation.Id,
                request.SenderId,
+               request.ConversationId,
                 messageEntity.Content,
                messageEntity.CreatedAt
             );
@@ -140,36 +147,36 @@ namespace Echo.Api.Features.Chat
             {
                 return HttpResult<IEnumerable<ChatMessageResponse>>.Failure("Conversation id is required.");
             }
-            var isMember = await _context.Conversations.AnyAsync(x => x.Id == query.ConversationId && x.Members.Any(x => x.UserId == query.UserId));
-
-            if (!isMember)
-            {
-                return HttpResult<IEnumerable<ChatMessageResponse>>.Failure("Forbidden.", StatusCodes.Status403Forbidden);
-
-            }
             var messagesQuery = _context.Conversations
                     .AsNoTracking()
                     .Where(c => c.Id == query.ConversationId)
                     .SelectMany(c => c.Messages);
 
+
             if (query.BeforeMessageId.HasValue)
             {
-                messagesQuery = messagesQuery.Where(m => m.CreatedAt < _context.Conversations
-                    .Where(c => c.Id == query.ConversationId)
-                    .SelectMany(c => c.Messages)
-                    .Where(x => x.Id == query.BeforeMessageId.Value)
-                    .Select(x => x.CreatedAt)
-                    .FirstOrDefault());
+                var beforeMessageCreatedAt = await _context.Conversations
+                            .AsNoTracking()
+                            .Where(c => c.Id == query.ConversationId)
+                            .SelectMany(c => c.Messages)
+                            .Where(m => m.Id == query.BeforeMessageId.Value)
+                            .Select(m => m.CreatedAt)
+                            .FirstOrDefaultAsync(cancellationToken);
+
+                messagesQuery = messagesQuery.Where(m => m.CreatedAt < beforeMessageCreatedAt);
             }
+
             var pageSize = query.PageSize ?? 20;
+
+            
             var messages = await messagesQuery
                .OrderByDescending(m => m.CreatedAt)
                .Take(pageSize)
                .Select(m => new ChatMessageResponse
                (
                     m.Id,
-                    query.ConversationId,
                 m.SenderId,
+                query.ConversationId,
                    m.Content,
                     m.CreatedAt
                ))
@@ -216,6 +223,21 @@ namespace Echo.Api.Features.Chat
             }
 
             return HttpResult<ConversationDetailsResponse>.Success(response);
+        }
+        public async Task<HttpResult> MarkAsRead(Guid conversationId, Guid userId)
+        {
+            var conversation = await _context.Conversations.Include(x => x.Members).Where(x => x.Id == conversationId).FirstOrDefaultAsync();
+
+            if (conversation == null)
+            {
+                return HttpResult.Failure("Conversation Not Found");
+            }
+
+            conversation.MarkAsRead(userId);
+
+            await _context.SaveChangesAsync();
+
+            return HttpResult.Success();
         }
     }
 }

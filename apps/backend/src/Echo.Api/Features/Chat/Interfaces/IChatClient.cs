@@ -16,5 +16,6 @@ namespace Echo.Api.Features.Chat.Interfaces
         Task UserStoppedTyping(Guid userId);
         Task UserOnline(Guid userId);
         Task UserOffline(Guid userId);
+        Task InitialOnlineUsers(List<string>? users);
     }
 }

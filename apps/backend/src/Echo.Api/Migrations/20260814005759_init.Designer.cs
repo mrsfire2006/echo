@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Echo.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260808110745_init")]
+    [Migration("20260814005759_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -35,9 +35,6 @@ namespace Echo.Api.Migrations
 
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsRevoked")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("Token")
                         .IsRequired()
@@ -63,6 +60,9 @@ namespace Echo.Api.Migrations
 
                     b.Property<DateTime?>("LastMessageAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("LastMessageId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("LastMessagePreview")
                         .HasColumnType("text");
@@ -97,6 +97,8 @@ namespace Echo.Api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.HasIndex("ConversationId", "UserId")
                         .IsUnique();
 
@@ -117,9 +119,6 @@ namespace Echo.Api.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("ReadAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("SenderId")
@@ -147,9 +146,6 @@ namespace Echo.Api.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsOnline")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
@@ -159,6 +155,12 @@ namespace Echo.Api.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("Username")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -177,6 +179,12 @@ namespace Echo.Api.Migrations
                     b.HasOne("Echo.Api.Features.Chat.Domain.Entities.Conversation", null)
                         .WithMany("Members")
                         .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Echo.Api.Features.Users.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

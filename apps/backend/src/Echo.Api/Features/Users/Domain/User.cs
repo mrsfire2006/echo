@@ -22,7 +22,6 @@ namespace Echo.Api.Features.Users.Domain
 
         public string? Bio { get; private set; }
 
-        public bool IsOnline { get; private set; }
 
 
         private User() : base(Guid.Empty)
@@ -74,18 +73,6 @@ namespace Echo.Api.Features.Users.Domain
         public void UpdateProfile(string? bio)
         {
             Bio = bio;
-        }
-
-
-        public void SetOnline()
-        {
-            IsOnline = true;
-        }
-
-
-        public void SetOffline()
-        {
-            IsOnline = false;
         }
     }
 }

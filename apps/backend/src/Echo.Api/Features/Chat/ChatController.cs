@@ -74,6 +74,7 @@ namespace Echo.Api.Features.Chat
 
 
         [HttpGet("conversations")]
+        [Authorize]
         [ProducesResponseType(typeof(HttpResult<IEnumerable<UserConversationResponse>>), StatusCodes.Status200OK)]
 
         public async Task<IActionResult> GetUserConversations(CancellationToken cancellationToken)
@@ -101,10 +102,38 @@ namespace Echo.Api.Features.Chat
                 return HandleResult(HttpResult<ConversationDetailsResponse>.Failure("Unauthorized", StatusCodes.Status401Unauthorized));
             }
 
- 
+
             var result = await _chatService.GetConversationDetails(conversationId, userId, cancellationToken);
             return HandleResult(result);
         }
+        [HttpPost("conversations/direct/read/:{conversationId:guid}")]
+        [Authorize]
+        public async Task<IActionResult> MarkAsRead([FromRoute] Guid conversationId, CancellationToken cancellationToken)
+        {
+            if (EnsureAuthenticatedUser(out Guid userId) is IActionResult)
+            {
+                return HandleResult(HttpResult.Failure("Unauthorized", StatusCodes.Status401Unauthorized));
+            }
+            var result = await _chatService.MarkAsRead(conversationId, userId);
+            return HandleResult(result);
+        }
 
+        [HttpPost]
+        public async Task<IActionResult> SendMessage(
+                [FromBody] SendMessageRequest request,
+                CancellationToken cancellationToken)
+        {
+            if (EnsureAuthenticatedUser(out Guid userId) is IActionResult)
+            {
+                return HandleResult(HttpResult<ChatMessageResponse>.Failure("Unauthorized", StatusCodes.Status401Unauthorized));
+            }
+
+
+            request.SenderId = userId;
+
+            var result = await _chatService.SaveMessageAsync(request);
+
+            return HandleResult(result);
+        }
     }
 }

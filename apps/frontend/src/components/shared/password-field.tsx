@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { Lock, Eye, EyeOff } from "lucide-react";
-
-export default function PasswordField({ label, name, value, onChange, placeholder }) {
+interface PasswordFieldProps {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+}
+export default function PasswordField({ label, name, value, onChange, placeholder }: PasswordFieldProps) {
   const [show, setShow] = useState(false);
 
   return (

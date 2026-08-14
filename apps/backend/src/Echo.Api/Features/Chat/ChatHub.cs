@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Echo.Api.Features.Chat.ChatHubServices;
 using Echo.Api.Features.Chat.Dtos.Requests;
 using Echo.Api.Features.Chat.Interfaces;
+using Echo.Api.Shared.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -14,48 +16,67 @@ namespace Echo.Api.Features.Chat
     public class ChatHub : Hub<IChatClient>
     {
         private readonly ChatService _chatService;
-        public ChatHub(ChatService chatService)
+        private readonly PresenceTracker _presenceTracker;
+
+        public ChatHub(ChatService chatService, PresenceTracker presenceTracker)
         {
             _chatService = chatService;
+            _presenceTracker = presenceTracker;
         }
 
         public override async Task OnConnectedAsync()
         {
             var currentUserId = GetCurrentUserId();
 
-            if (currentUserId != Guid.Empty)
+            if (currentUserId == Guid.Empty)
             {
-                List<string> contactUserIds = await _chatService.GetContactUserIdsAsync(currentUserId);
-
-                if (contactUserIds.Count > 0)
-                {
-                    await Clients.Users(contactUserIds).UserOnline(currentUserId);
-                }
+                Context.Abort();
+                return;
             }
 
+            var userIdStr = currentUserId.ToString();
+
+            var isFirst = await _presenceTracker.UserConnected(userIdStr, Context.ConnectionId);
+            List<string> contactUserIds = await _chatService.GetContactUserIdsAsync(currentUserId);
+            if (isFirst && contactUserIds.Any())
+            {
+                await Clients.Users(contactUserIds).UserOnline(currentUserId);
+            }
+            if (contactUserIds.Any())
+            {
+                var onlineContactIds = await _presenceTracker.GetOnlineUsersAsync(contactUserIds);
+
+                await Clients.Caller.InitialOnlineUsers(onlineContactIds);
+            }
             await base.OnConnectedAsync();
         }
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             var currentUserId = GetCurrentUserId();
-
             if (currentUserId != Guid.Empty)
             {
-                List<string> contactUserIds = await _chatService.GetContactUserIdsAsync(currentUserId);
+                var userIdStr = currentUserId.ToString();
+                var isCompletelyOffline = await _presenceTracker.UserDisconnected(userIdStr, Context.ConnectionId);
 
-                if (contactUserIds.Count > 0)
+                if (isCompletelyOffline)
                 {
-                    await Clients.Users(contactUserIds).UserOffline(currentUserId);
+                    List<string> contactUserIds = await _chatService.GetContactUserIdsAsync(currentUserId);
+                    if (contactUserIds.Any())
+                    {
+                        await Clients.Users(contactUserIds).UserOffline(currentUserId);
+                    }
                 }
             }
 
             await base.OnDisconnectedAsync(exception);
         }
-        public async Task SendPrivateMessageAsync(SendMessageRequest request)
+        public async Task<HttpResult> SendPrivateMessageAsync(SendMessageRequest request)
         {
-            if (!Guid.TryParse(Context.UserIdentifier!, out Guid UserId))
+            var UserId = GetCurrentUserId();
+
+            if (UserId == Guid.Empty)
             {
-                return;
+                return HttpResult.Failure("Unauthorized", StatusCodes.Status401Unauthorized);
             }
             request.SenderId = UserId;
 
@@ -63,12 +84,13 @@ namespace Echo.Api.Features.Chat
 
             if (result.IsFailure)
             {
-                return;
+                return HttpResult.Failure(result.ErrorMessage, result.StatusCode);
             }
             var messageResponse = result.Value!;
 
             await Clients.User(request.ReceiverId.ToString()).ReceivePrivateMessage(messageResponse);
-            await Clients.User(messageResponse.SenderId.ToString()).ReceivePrivateMessage(messageResponse);
+            await Clients.Caller.ReceivePrivateMessage(messageResponse);
+            return HttpResult.Success();
         }
 
         public async Task SendTypingAsync(Guid receiverId)

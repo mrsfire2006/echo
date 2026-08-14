@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Echo.Api.Features.Shared.Infrastructure.Persistence;
+using Echo.Api.Features.Users.Dtos.Requests;
 using Echo.Api.Features.Users.Dtos.Responses;
 using Echo.Api.Shared.Common;
 using Microsoft.EntityFrameworkCore;
@@ -35,7 +36,12 @@ namespace Echo.Api.Features.Users
             ));
         }
 
-        
+        public async Task<HttpResult<IEnumerable<GetUserResponse>>> GetUsersAsync(string username, CancellationToken cancellationToken)
+        {
+            var users = await _context.Users.Where(x => x.Username == username).Select(x => new GetUserResponse(x.Id, x.Username)).ToListAsync();
+
+            return HttpResult<IEnumerable<GetUserResponse>>.Success(users);
+        }
 
 
     }

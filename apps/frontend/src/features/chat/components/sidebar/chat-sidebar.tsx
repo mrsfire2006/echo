@@ -1,9 +1,13 @@
 'use client';
 
+import { Button } from "@/components/ui/button";
+import { DoodleBackground } from "../conversation/doodle-background";
 import ChatNavbar from "./chat-navbar";
-import { Search, SquarePen } from "lucide-react";
-
+import { Search } from "lucide-react";
+import UsersSearchDialog from "./users-search-dialog";
+ 
 export default function ChatSidebar() {
+
     return (
         <aside className="flex h-full w-full flex-col gap-4 px-3 py-4 bg-sidebar">
             {/* Header Area */}
@@ -13,13 +17,8 @@ export default function ChatSidebar() {
                         Conversations
                     </h2>
 
-                    <button
-                        type="button"
-                        className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs transition-all duration-200 hover:opacity-90 active:scale-95"
-                        title="New Chat"
-                    >
-                        <SquarePen className="h-4.5 w-4.5" />
-                    </button>
+                    <UsersSearchDialog />
+
                 </div>
 
                 {/* Search Bar with Icon */}
@@ -53,8 +52,11 @@ export default function ChatSidebar() {
                 </div>
             </header>
 
+            <DoodleBackground className="opacity-[0.06] dark:opacity-[0.03] md:hidden block" />
             <ChatNavbar />
 
         </aside>
     );
 }
+
+

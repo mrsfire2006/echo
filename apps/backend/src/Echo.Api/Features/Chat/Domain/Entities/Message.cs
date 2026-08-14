@@ -13,9 +13,7 @@ namespace Echo.Api.Features.Chat.Domain.Entities
 
         public DateTime CreatedAt { get; private set; }
 
-        public DateTime? ReadAt { get; private set; }
 
-        public bool IsRead => ReadAt.HasValue;
 
         private Message()
             : base(Guid.Empty)
@@ -33,7 +31,6 @@ namespace Echo.Api.Features.Chat.Domain.Entities
             SenderId = senderId;
             Content = content;
             CreatedAt = DateTime.UtcNow;
-            ReadAt = null;
         }
 
         public static Message Create(
@@ -49,11 +46,6 @@ namespace Echo.Api.Features.Chat.Domain.Entities
                 content);
         }
 
-        public void MarkAsRead()
-        {
-            if (ReadAt.HasValue) return;
 
-            ReadAt = DateTime.UtcNow;
-        }
     }
 }

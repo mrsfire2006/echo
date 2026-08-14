@@ -15,7 +15,6 @@ namespace Echo.Api.Features.Auth.Domain
 
         public DateTime CreatedAt { get; private set; }
 
-        public bool IsRevoked { get; private set; }
         public Guid UserId { get; private set; }
 
 
@@ -56,9 +55,6 @@ namespace Echo.Api.Features.Auth.Domain
         }
 
 
-        public void Revoke()
-        {
-            IsRevoked = true;
-        }
+
     }
 }

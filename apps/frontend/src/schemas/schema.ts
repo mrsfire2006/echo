@@ -204,6 +204,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/chat/conversations/direct/read/:{conversationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    conversationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SendMessageRequest"];
+                    "text/json": components["schemas"]["SendMessageRequest"];
+                    "application/*+json": components["schemas"]["SendMessageRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/user/me": {
         parameters: {
             query?: never;
@@ -229,6 +303,45 @@ export interface paths {
                         "text/plain": components["schemas"]["HttpResultOfGetUserProfileResponse"];
                         "application/json": components["schemas"]["HttpResultOfGetUserProfileResponse"];
                         "text/json": components["schemas"]["HttpResultOfGetUserProfileResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/user/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Username?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["HttpResultOfIEnumerableOfGetUserResponse"];
+                        "application/json": components["schemas"]["HttpResultOfIEnumerableOfGetUserResponse"];
+                        "text/json": components["schemas"]["HttpResultOfIEnumerableOfGetUserResponse"];
                     };
                 };
             };
@@ -364,6 +477,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["HttpResult"];
+                        "application/json": components["schemas"]["HttpResult"];
+                        "text/json": components["schemas"]["HttpResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -372,16 +522,14 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** Format: uuid */
-            conversationId: string;
-            /** Format: uuid */
             senderId: string;
+            /** Format: uuid */
+            conversationId: string;
             content: string;
             /** Format: date-time */
             createdAt: string;
         };
         ConversationDetailsResponse: {
-            /** Format: uuid */
-            conversationId: string;
             /** Format: uuid */
             userId: string;
             name: string;
@@ -395,6 +543,11 @@ export interface components {
             id: string;
             userName: string;
             email: string;
+        };
+        GetUserResponse: {
+            /** Format: uuid */
+            userId: string;
+            username: string;
         };
         HttpResult: {
             isSuccess?: boolean;
@@ -436,6 +589,14 @@ export interface components {
             /** Format: int32 */
             statusCode?: number | string;
         };
+        HttpResultOfIEnumerableOfGetUserResponse: {
+            value?: null | components["schemas"]["GetUserResponse"][];
+            isSuccess?: boolean;
+            isFailure?: boolean;
+            errorMessage?: string;
+            /** Format: int32 */
+            statusCode?: number | string;
+        };
         HttpResultOfIEnumerableOfUserConversationResponse: {
             value?: null | components["schemas"]["UserConversationResponse"][];
             isSuccess?: boolean;
@@ -453,9 +614,18 @@ export interface components {
             email: string;
             password: string;
         };
+        SendMessageRequest: {
+            /** Format: uuid */
+            conversationId: string;
+            /** Format: uuid */
+            receiverId: string;
+            content: string;
+        };
         UserConversationResponse: {
             /** Format: uuid */
             conversationId: string;
+            /** Format: uuid */
+            userId: string;
             username: string;
             lastMessage: string;
             /** Format: int32 */

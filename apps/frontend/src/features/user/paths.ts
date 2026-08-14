@@ -2,5 +2,6 @@
 
 
 export const userApiPaths = {
-    userProfile : "user/me"
+    userProfile : "user/me",
+    getUsers:"user/users"
 }

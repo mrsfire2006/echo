@@ -20,4 +20,10 @@ export const AuthServices = {
     });
     return result;
   },
+  logoutAsync: async () => {
+    const result = await clientFetch(`${authApiPaths.logout}`, {
+      method: "POST",
+    });
+    return result;
+  },
 };

@@ -5,11 +5,11 @@ import { Avatar, AvatarBadge, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 interface UserAvatarProps {
-    name: string;
-    id: string;
+    username: string;
+    id?: string;
     className?: string;
     fallbackClassName?: string;
-    onLine: boolean
+    onLine?: boolean;
 }
 
 function getInitials(name: string): string {
@@ -19,39 +19,62 @@ function getInitials(name: string): string {
     return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 
-function getAvatarSolidHsl(id: string) {
-    if (!id) return { backgroundColor: "var(--primary)", color: "var(--primary-foreground)" };
-
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) {
-        hash = id.charCodeAt(i) + ((hash << 5) - hash);
+function hashString(str: string): number {
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+        hash ^= str.charCodeAt(i);
+        hash = Math.imul(hash, 0x01000193);
     }
+    return hash >>> 0;
+}
 
-    const hue = Math.abs(hash) % 360;
+const AVATAR_PALETTE = [
+    "#e11d48", // rose
+    "#ea580c", // orange
+    "#d97706", // amber
+    "#65a30d", // lime
+    "#16a34a", // green
+    "#059669", // emerald
+    "#0d9488", // teal
+    "#0891b2", // cyan
+    "#0284c7", // sky
+    "#2563eb", // blue
+    "#4f46e5", // indigo
+    "#7c3aed", // violet
+    "#9333ea", // purple
+    "#c026d3", // fuchsia
+    "#db2777", // pink
+];
+
+function getAvatarStyle(username: string) {
+    if (!username) return { backgroundColor: "var(--primary)", color: "var(--primary-foreground)" };
+
+    const hash = hashString(username);
+    const color = AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
 
     return {
-        backgroundColor: `hsl(${hue}, 65%, 45%)`,
+        backgroundColor: color,
         color: "#ffffff",
     };
 }
 
 export default function UserAvatar({
-    name,
-    id,
+    username,
     className,
     fallbackClassName,
-    onLine
+    onLine,
 }: UserAvatarProps) {
     const { initials, style } = useMemo(() => {
         return {
-            initials: getInitials(name),
-            style: getAvatarSolidHsl(id),
+            initials: getInitials(username),
+            style: getAvatarStyle(username),
         };
-    }, [name, id]);
-
+    }, [username]);
     return (
         <Avatar className={cn("h-10 w-10 shrink-0 shadow-xs", className)}>
-            <AvatarBadge className={`${onLine ? "bg-green-500" : "bg-red-500 "}`} />
+
+            <AvatarBadge className={onLine ? "bg-green-500" : "bg-red-500"} />
+
             <AvatarFallback
                 style={style}
                 className={cn(

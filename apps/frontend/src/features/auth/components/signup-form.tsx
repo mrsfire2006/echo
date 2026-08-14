@@ -29,7 +29,6 @@ export function RegisterForm({ className, onSuccess }: RegisterFormProps) {
     confirm: "",
   });
   const [error, setError] = useState("");
-  const router = useRouter();
   const { mutateAsync: registerAsync, isPending } = useRegisterUserCommand();
   const queryClient = useQueryClient();
 
@@ -59,7 +58,7 @@ export function RegisterForm({ className, onSuccess }: RegisterFormProps) {
           onSuccess();
         } else {
           await queryClient.invalidateQueries();
-          router.push(chatPagesPaths.chat);
+          window.location.href = "/chat"
         }
       }
     } catch {
