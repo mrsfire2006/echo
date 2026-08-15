@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+'use client'
+import React, { useCallback, useEffect, useState } from "react";
 import { useSignalR } from "../components/providers/signalR-provider";
 import { ConversationDetailsResponse, ConversationMessagesResponse, SingleConversationMessage, UserConversationsResponse } from "../types";
 import { useGetConversationMessages } from "../hooks";
@@ -7,11 +8,11 @@ import { ChatKeys } from "../chat-keys";
 import { validate } from "uuid";
 import { HttpResult } from "@/constants";
 import { playMessageSound } from "@/lib/sound";
+import { createContext } from "vm";
+import { convertReusedFlightRouterStateToRouteTree } from "next/dist/client/components/segment-cache/cache";
 
 interface UseMessageProps {
     conversationId: string
-
-
 }
 interface MessageRequestProps {
     receiverId: string,
@@ -19,6 +20,7 @@ interface MessageRequestProps {
     conversationId: string
 
 }
+
 
 export default function useMessage({ conversationId }: UseMessageProps) {
     const { connection } = useSignalR();
@@ -62,6 +64,7 @@ export default function useMessage({ conversationId }: UseMessageProps) {
                     };
                 }
             );
+
         }
 
 

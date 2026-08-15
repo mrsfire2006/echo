@@ -26,18 +26,31 @@ export function BubbleMessage({ message, isSent, messageTime }: BubbleMessagePro
                     )}
                 >
                     <div className="flex flex-col gap-1">
+
+
                         <p className="text-sm leading-relaxed wrap-break-words whitespace-pre-wrap">
                             {message}
                         </p>
 
-                        <span
-                            className={cn(
-                                "text-[10px] select-none self-end opacity-75 dir-ltr",
-                                isSent ? "text-chat-sent-foreground/80" : "text-muted-foreground"
+
+
+                        <div className="flex flex-row justify-between">
+
+                            <span
+                                className={cn(
+                                    "text-[10px] select-none self-end opacity-75 dir-ltr",
+                                    isSent ? "text-chat-sent-foreground/80" : "text-muted-foreground"
+                                )}
+                            >
+                                {formatMessageTime(messageTime)}
+                            </span>
+                            {isSent && (
+                                <span className="text-[11px] font-medium select-none text-chat-sent-foreground/70">
+                                    You
+                                </span>
                             )}
-                        >
-                            {formatMessageTime(messageTime)}
-                        </span>
+                        </div>
+
                     </div>
                 </BubbleContent>
             </Bubble>

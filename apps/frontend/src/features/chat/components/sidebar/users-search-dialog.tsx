@@ -18,16 +18,18 @@ import { useRouter } from "next/navigation"
 import { useGetUsers } from "@/features/user/hooks"
 import UserAvatar from "@/features/user/components/user-avatar"
 import { useQueryClient } from "@tanstack/react-query"
+import usePresence from "../providers/presence-provider"
+import { useCurrentConversation } from "../providers/current-conversation-provider"
 
 export default function UsersSearchDialog() {
     const [open, setOpen] = useState(false)
     const [inputValue, setInputValue] = useState<string>("")
     const [searchQuery, setSearchQuery] = useState<string>("")
-    const queryClient = useQueryClient();
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
     const { mutateAsync: CreatConversationAsync, isPending } = useCreateConversation();
     const [error, setError] = useState<string>("");
     const router = useRouter();
+    const { onlineUsers } = usePresence()
 
     const { data: users, isFetching } = useGetUsers(searchQuery);
 
@@ -40,6 +42,8 @@ export default function UsersSearchDialog() {
         setSelectedUserId(null);
         setSearchQuery(inputValue.trim());
     }
+    const { setCurrentConversation } = useCurrentConversation();
+
 
     const handleStartChat = async () => {
         if (!selectedUserId) return
@@ -49,8 +53,10 @@ export default function UsersSearchDialog() {
 
         if (result.isSuccess) {
             setOpen(false)
+            const isOnline = onlineUsers.includes(selectedUserId);
+            const username = users?.value?.find(x => x.userId === selectedUserId)?.username;
+            setCurrentConversation({ conversationId: result.value, isOnline, otherUserId: selectedUserId, username: username! })
             router.push(`/chat/${result.value}`)
-
         }
         else if (result.isFailure) {
             setError(result.errorMessage ?? "")
@@ -124,7 +130,8 @@ export default function UsersSearchDialog() {
     transition-colors">
                     {users && users.isSuccess && users?.value?.length! > 0 ? (
                         users.value!.map((user) => {
-                            const isSelected = selectedUserId === user.userId
+                            const isSelected = selectedUserId === user.userId;
+                            const isOnline = onlineUsers.includes(user.userId);
                             return (
                                 <div
                                     key={user.userId}
@@ -136,7 +143,7 @@ export default function UsersSearchDialog() {
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-xs">
-                                            <UserAvatar  username={user.username} />
+                                            <UserAvatar onLine={isOnline} username={user.username} />
                                         </div>
 
                                         <div className="flex flex-col">

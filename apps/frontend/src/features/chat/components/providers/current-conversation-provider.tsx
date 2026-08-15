@@ -3,9 +3,11 @@ import React, {
     createContext,
     SetStateAction,
     useContext,
+    useEffect,
     useMemo,
     useState,
 } from "react";
+import usePresence from "./presence-provider";
 
 export interface CurrentConversation {
     conversationId: string;
@@ -36,6 +38,22 @@ export function CurrentConversationProvider({
     const clearCurrentConversation = () => {
         setCurrentConversation(null);
     };
+    const { onlineUsers } = usePresence();
+    useEffect(() => {
+        if (!currentConversation) return;
+        if (onlineUsers.includes(currentConversation.otherUserId)) {
+            setCurrentConversation((prev) => {
+                return prev ? { ...prev, isOnline: true } : prev;
+            });
+        }
+        else {
+            setCurrentConversation((prev) => {
+                return prev ? { ...prev, isOnline: false } : prev;
+            });
+        }
+
+    }, [onlineUsers,currentConversation?.otherUserId])
+
 
     const value = useMemo(
         () => ({

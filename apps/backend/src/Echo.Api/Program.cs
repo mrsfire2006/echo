@@ -25,16 +25,30 @@ builder.Services.AddControllers(options =>
 builder.Services.AddSignalR();
 
 builder.Services.AddHttpContextAccessor();
-
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("EchoClientPolicy", policy =>
     {
-        policy
-            .SetIsOriginAllowed(_ => true)
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+        if (builder.Environment.IsDevelopment())
+        {
+            policy
+                .SetIsOriginAllowed(origin =>
+                {
+                    var uri = new Uri(origin);
+                    return uri.Host is "localhost" or "127.0.0.1";
+                })
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        }
+        else
+        {
+            policy
+                .WithOrigins("https://echo-rho-vert.vercel.app")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        }
     });
 });
 
@@ -43,7 +57,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
+
     await db.Database.MigrateAsync();
 }
 
@@ -53,11 +67,14 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 
 }
+else
+{
 
-
+}
+app.UseHttpsRedirection();
 
 app.UseRouting();
-app.UseCors();
+app.UseCors("EchoClientPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseWebSockets();

@@ -93,19 +93,21 @@ namespace Echo.Api.Features.Chat
             return HttpResult.Success();
         }
 
-        public async Task SendTypingAsync(Guid receiverId)
+        public async Task SendTypingAsync()
         {
             var currentUserId = GetCurrentUserId();
+            List<string> contactUserIds = await _chatService.GetContactUserIdsAsync(currentUserId);
 
-            await Clients.User(receiverId.ToString())
+            await Clients.Users(contactUserIds)
                         .UserTyping(currentUserId);
         }
 
-        public async Task SendStoppedTypingAsync(Guid receiverId)
+        public async Task SendStoppedTypingAsync()
         {
             var currentUserId = GetCurrentUserId();
+            List<string> contactUserIds = await _chatService.GetContactUserIdsAsync(currentUserId);
 
-            await Clients.User(receiverId.ToString())
+            await Clients.Users(contactUserIds)
                          .UserStoppedTyping(currentUserId);
         }
         private Guid GetCurrentUserId()

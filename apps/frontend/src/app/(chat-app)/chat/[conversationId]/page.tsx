@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import useMessage from "@/features/chat/chat-hooks/use-message";
+import useTypeUser from "@/features/chat/chat-hooks/use-type-user";
 import { BubbleMessage } from "@/features/chat/components/conversation/bubble-message";
 import ConversationHeader from "@/features/chat/components/conversation/conversation-header";
 import { DoodleBackground } from "@/features/chat/components/conversation/doodle-background";
@@ -49,12 +50,6 @@ export default function ConversationPage() {
     const { data: user } = useGetUserProfile();
     const [messageText, setMessageText] = useState("");
 
-    // كل صفحة جاية من الباك إند مرتبة تصاعديًا داخليًا (الأقدم -> الأحدث).
-    // pages[0] = أحدث دفعة (أول fetch)
-    // pages[1] = دفعة أقدم (fetch بعد الـ scroll لفوق)
-    // ...وهكذا. فعشان نعرض الرسائل بالترتيب الصح (قديم -> جديد)
-    // لازم نعكس ترتيب الصفحات نفسها الأول، وبعدين نعمل flatten
-    // (من غير ما نلمس ترتيب الرسائل *جوه* كل صفحة)
     const rawMessages = messagesPages?.pages
         ? messagesPages.pages.slice().reverse().flat()
         : [];
@@ -88,7 +83,6 @@ export default function ConversationPage() {
         return () => observer.disconnect();
     }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-    // الحفاظ على موقع الـ Scroll الحالي عند تحميل رسائل قديمة (Prevent Scroll Jump)
     useLayoutEffect(() => {
         if (containerRef.current && previousScrollHeightRef.current > 0) {
             const container = containerRef.current;
@@ -108,6 +102,7 @@ export default function ConversationPage() {
             isInitialLoad.current = false;
         }
     }, [messages.length]);
+    const { handleTyping } = useTypeUser();
 
     return (
         <section className="p-3 h-full w-full flex flex-col overflow-hidden">
@@ -132,13 +127,14 @@ export default function ConversationPage() {
                     </div>
 
                     <div className="flex-1 space-y-3">
-                        {messages.map((m) => (
+                        {messages.map((m, index) => (
                             <BubbleMessage
                                 key={m?.id}
                                 isSent={user?.value?.id === m?.senderId}
                                 message={m?.content ?? "Message Deleted"}
                                 messageTime={m?.createdAt!}
                                 messageId={m?.id}
+
                             />
                         ))}
                         <div ref={messagesEndRef} />
@@ -171,8 +167,9 @@ export default function ConversationPage() {
                             </Button>
 
                             <Input
+
                                 value={messageText}
-                                onChange={(e) => setMessageText(e.target.value)}
+                                onChange={(e) => { setMessageText(e.target.value); handleTyping() }}
                                 placeholder="Type a message..."
                                 className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 px-2 text-base placeholder:text-muted-foreground/60"
                             />

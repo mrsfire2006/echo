@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Providers from "@/components/providers";
-import Link from "next/link";
-import { CircleUserRound, MessageCircleMore, Settings } from "lucide-react";
- 
+import AppProvider from "@/components/app-provider";
+   
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -19,9 +17,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
 
-        <Providers>
+        <AppProvider>
           {children}
-        </Providers>
+        </AppProvider>
 
       </body>
     </html>
