@@ -116,3 +116,4 @@ project.assets.json
 # SVG Files 
 *.svg
 **/*.svg
+!apps/frontend/public/doodles.svg
