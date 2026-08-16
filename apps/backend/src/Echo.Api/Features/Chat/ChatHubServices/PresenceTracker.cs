@@ -50,10 +50,21 @@ namespace Echo.Api.Features.Chat.ChatHubServices
             return Task.FromResult(isCompletelyOffline);
         }
 
+
         public Task<List<string>> GetOnlineUsersAsync(List<string> userIds)
         {
             var onlineUsers = userIds.Where(id => _onlineUsers.ContainsKey(id)).ToList();
             return Task.FromResult(onlineUsers);
+        }
+        public bool IsUserOnline(string userId)
+        {
+            var isExist = _onlineUsers.ContainsKey(userId);
+
+            if (isExist)
+            {
+                return true;
+            }
+            return false;
         }
         public Task<IReadOnlyList<string>> GetConnectionIdsForUser(string userId)
         {

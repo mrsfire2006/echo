@@ -45,7 +45,7 @@ namespace Echo.Api.Features.Chat
             if (contactUserIds.Any())
             {
                 var onlineContactIds = await _presenceTracker.GetOnlineUsersAsync(contactUserIds);
-
+                onlineContactIds.Add(currentUserId.ToString());
                 await Clients.Caller.InitialOnlineUsers(onlineContactIds);
             }
             await base.OnConnectedAsync();
@@ -109,6 +109,10 @@ namespace Echo.Api.Features.Chat
 
             await Clients.Users(contactUserIds)
                          .UserStoppedTyping(currentUserId);
+        }
+        public async Task<List<string>> GetOnlineUsersAsync(string[] usersIds)
+        {
+            return await _presenceTracker.GetOnlineUsersAsync(usersIds.ToList());
         }
         private Guid GetCurrentUserId()
         {

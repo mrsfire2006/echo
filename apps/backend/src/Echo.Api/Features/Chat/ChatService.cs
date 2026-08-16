@@ -134,6 +134,7 @@ namespace Echo.Api.Features.Chat
                request.SenderId,
                request.ConversationId,
                 messageEntity.Content,
+                // true,
                messageEntity.CreatedAt
             );
 
@@ -168,7 +169,7 @@ namespace Echo.Api.Features.Chat
 
             var pageSize = query.PageSize ?? 20;
 
-            
+
             var messages = await messagesQuery
                .OrderByDescending(m => m.CreatedAt)
                .Take(pageSize)
@@ -178,6 +179,7 @@ namespace Echo.Api.Features.Chat
                 m.SenderId,
                 query.ConversationId,
                    m.Content,
+                   
                     m.CreatedAt
                ))
                .ToListAsync();

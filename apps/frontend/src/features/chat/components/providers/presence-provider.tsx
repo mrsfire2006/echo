@@ -1,9 +1,10 @@
 'use client'
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useSignalR } from "./signalR-provider";
 
 interface PresenceValue {
-    onlineUsers: string[]
+    onlineUsers: string[],
+
 }
 
 const PresenceContext = createContext<PresenceValue>({ onlineUsers: [] });
@@ -39,6 +40,8 @@ export function PresenceContextProvider({ children }: { children: React.ReactNod
         }
     }, [connection])
 
+
+
     return (
         <PresenceContext.Provider value={{ onlineUsers }}>{children}</PresenceContext.Provider>
     )
@@ -47,6 +50,7 @@ export function PresenceContextProvider({ children }: { children: React.ReactNod
 
 export default function usePresence() {
     const context = useContext(PresenceContext);
+
     return context;
 
 }

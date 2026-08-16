@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -15,11 +15,13 @@ import { SquarePen, Search, MessageSquare, Check, UserPlus2, X } from "lucide-re
 import { useCreateConversation } from "../../hooks"
 import { validate } from "uuid"
 import { useRouter } from "next/navigation"
-import { useGetUsers } from "@/features/user/hooks"
+import { useGetUserProfile, useGetUsers } from "@/features/user/hooks"
 import UserAvatar from "@/features/user/components/user-avatar"
 import { useQueryClient } from "@tanstack/react-query"
 import usePresence from "../providers/presence-provider"
 import { useCurrentConversation } from "../providers/current-conversation-provider"
+import { useIsUserOnline } from "../../chat-hooks/use-is-user-online"
+import useIsUsersOnline from "../../chat-hooks/use-is-users-online"
 
 export default function UsersSearchDialog() {
     const [open, setOpen] = useState(false)
@@ -29,9 +31,32 @@ export default function UsersSearchDialog() {
     const { mutateAsync: CreatConversationAsync, isPending } = useCreateConversation();
     const [error, setError] = useState<string>("");
     const router = useRouter();
-    const { onlineUsers } = usePresence()
+    const { getUsersOnline } = useIsUsersOnline();
+    const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+
 
     const { data: users, isFetching } = useGetUsers(searchQuery);
+
+    useEffect(() => {
+        if (!users?.value) return;
+
+        const getOnlines = async () => {
+            const filterUsers = users.value?.map((u) => u.userId);
+            if (!filterUsers) {
+                return;
+            }
+            if (filterUsers && filterUsers.length === 0) {
+                setOnlineUsers([]);
+                return;
+            }
+
+            const result = await getUsersOnline(filterUsers);
+
+            setOnlineUsers(result);
+        };
+
+        getOnlines();
+    }, [users]);
 
     const handleSelectUser = (id: string) => {
         setSelectedUserId((prev) => (prev === id ? null : id))
@@ -56,6 +81,7 @@ export default function UsersSearchDialog() {
             const isOnline = onlineUsers.includes(selectedUserId);
             const username = users?.value?.find(x => x.userId === selectedUserId)?.username;
             setCurrentConversation({ conversationId: result.value, isOnline, otherUserId: selectedUserId, username: username! })
+
             router.push(`/chat/${result.value}`)
         }
         else if (result.isFailure) {

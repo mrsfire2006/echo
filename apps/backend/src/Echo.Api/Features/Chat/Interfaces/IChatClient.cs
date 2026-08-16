@@ -17,5 +17,6 @@ namespace Echo.Api.Features.Chat.Interfaces
         Task UserOnline(Guid userId);
         Task UserOffline(Guid userId);
         Task InitialOnlineUsers(List<string>? users);
+        Task ConversationCreated();
     }
 }

@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Echo.Api.Features.Chat.ChatHubServices;
 using Echo.Api.Features.Chat.Dtos.Requests;
 using Echo.Api.Features.Chat.Dtos.Responses;
 using Echo.Api.Shared.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Echo.Api.Features.Chat
 {
@@ -15,10 +17,14 @@ namespace Echo.Api.Features.Chat
     {
 
         private readonly ChatService _chatService;
+        private readonly IHubContext<ChatHub> _chat;
+        private readonly PresenceTracker _presence;
 
-        public ChatController(ChatService chatService)
+        public ChatController(ChatService chatService, IHubContext<ChatHub> chat, PresenceTracker presence)
         {
             _chatService = chatService;
+            _chat = chat;
+            _presence = presence;
         }
 
 
@@ -34,6 +40,17 @@ namespace Echo.Api.Features.Chat
             }
             request.SenderId = userId;
             var result = await _chatService.CreateDirectConversationAsync(request, cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                var isUserOnline = _presence.IsUserOnline(request.ReceiverId.ToString());
+                if (isUserOnline)
+                {
+                    await _chat.Clients.User(request.ReceiverId.ToString()).SendAsync("UserOnline", userId.ToString());
+                    await _chat.Clients.User(userId.ToString()).SendAsync("UserOnline", request.ReceiverId.ToString());
+                    await _chat.Clients.User(request.ReceiverId.ToString()).SendAsync("ConversationCreated", HttpResult.Success());
+                }
+            }
             return HandleResult(result);
         }
         [HttpGet("conversations/direct/:{receiverId:guid}")]

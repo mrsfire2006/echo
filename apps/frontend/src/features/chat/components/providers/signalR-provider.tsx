@@ -1,17 +1,19 @@
 'use client';
 
-import { aspApiUrl } from '@/constants';
+import { aspApiUrl, HttpResult } from '@/constants';
 import {
     HubConnection,
     HubConnectionBuilder,
     LogLevel,
 } from '@microsoft/signalr';
+import { useQueryClient } from '@tanstack/react-query';
 import React, {
     createContext,
     useContext,
     useEffect,
     useState,
 } from 'react';
+import { ChatKeys } from '../../chat-keys';
 
 interface SignalRContextValue {
     connection: HubConnection | null;
@@ -29,6 +31,7 @@ export default function SignalRProvider({
 }) {
     const [connection, setConnection] = useState<HubConnection | null>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const queryClient = useQueryClient();
 
     useEffect(() => {
         let cancelled = false;
@@ -58,6 +61,12 @@ export default function SignalRProvider({
                 setIsConnected(false);
             }
         });
+        const handleConversationCreated = (result: HttpResult) => {
+            if (result.isSuccess) {
+                queryClient.invalidateQueries({ queryKey: ChatKeys.UserConversations})
+            }
+        }
+        newConnection.on("ConversationCreated", handleConversationCreated)
 
         setConnection(newConnection);
 
@@ -65,8 +74,9 @@ export default function SignalRProvider({
             cancelled = true;
 
             setIsConnected(false);
-
+            newConnection.off("ConversationCreated", handleConversationCreated)
             newConnection.stop().catch(() => { });
+
         };
     }, []);
 
@@ -106,7 +116,7 @@ export default function SignalRProvider({
         };
     }, [connection]);
 
-    
+
     useEffect(() => {
         const unlockAudio = () => {
             const a = new Audio("/sounds/notification.mp3");
