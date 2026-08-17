@@ -51,7 +51,8 @@ namespace Echo.Api.Migrations
                     ConversationId = table.Column<Guid>(type: "uuid", nullable: false),
                     SenderId = table.Column<Guid>(type: "uuid", nullable: false),
                     Content = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -71,9 +72,7 @@ namespace Echo.Api.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     ConversationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    JoinedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastReadMessageId = table.Column<Guid>(type: "uuid", nullable: true),
-                    LastReadAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    JoinedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -125,9 +124,9 @@ namespace Echo.Api.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Message_ConversationId_CreatedAt",
+                name: "IX_Message_ConversationId_SenderId_Status",
                 table: "Message",
-                columns: new[] { "ConversationId", "CreatedAt" });
+                columns: new[] { "ConversationId", "SenderId", "Status" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_UserId",

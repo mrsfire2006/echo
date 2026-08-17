@@ -18,5 +18,8 @@ namespace Echo.Api.Features.Chat.Interfaces
         Task UserOffline(Guid userId);
         Task InitialOnlineUsers(List<string>? users);
         Task ConversationCreated();
+        Task ReceiveMessagesStatus(MessageStatusChanged MessagesStatu);
+
+
     }
 }

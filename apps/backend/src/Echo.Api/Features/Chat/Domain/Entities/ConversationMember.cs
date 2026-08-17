@@ -9,8 +9,8 @@ namespace Echo.Api.Features.Chat.Domain.Entities
         public Guid UserId { get; private set; }
         public Guid ConversationId { get; private set; }
         public DateTime JoinedAt { get; private set; }
-        public Guid? LastReadMessageId { get; private set; }
-        public DateTime? LastReadAt { get; private set; }
+        // public Guid? LastReadMessageId { get; private set; }
+        // public DateTime? LastReadAt { get; private set; }
 
         // EF Core Constructor
         private ConversationMember() : base(Guid.Empty)
@@ -33,12 +33,12 @@ namespace Echo.Api.Features.Chat.Domain.Entities
             return new ConversationMember(Guid.NewGuid(), userId, conversationId);
         }
 
-        public void MarkAsRead(Guid messageId)
-        {
+        // public void MarkAsRead(Guid messageId)
+        // {
             
 
-            LastReadMessageId = messageId;
-            LastReadAt = DateTime.UtcNow;
-        }
+        //     LastReadMessageId = messageId;
+        //     LastReadAt = DateTime.UtcNow;
+        // }
     }
 }

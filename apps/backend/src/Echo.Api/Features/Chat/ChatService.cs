@@ -1,4 +1,5 @@
 using Echo.Api.Features.Chat.Domain.Entities;
+using Echo.Api.Features.Chat.Domain.Enums;
 using Echo.Api.Features.Chat.Dtos.Requests;
 using Echo.Api.Features.Chat.Dtos.Responses;
 using Echo.Api.Features.Shared.Infrastructure.Persistence;
@@ -75,35 +76,62 @@ namespace Echo.Api.Features.Chat
             GetUserConversationsRequest query,
             CancellationToken cancellationToken)
         {
+
             var conversations = await (
-                from c in _context.Conversations
-                where c.Members.Any(m => m.UserId == query.UserId)
+                from c in _context.Conversations.AsNoTracking()
+                where c.Members.Any(x => x.UserId == query.UserId)
 
-                let currentMember = c.Members.FirstOrDefault(m => m.UserId == query.UserId)
-
-                let otherUserId = c.Members
-                   .Where(m => m.UserId != query.UserId)
-                   .Select(m => m.UserId)
-                   .FirstOrDefault()
-
-                join u in _context.Users on otherUserId equals u.Id
-
-                orderby c.LastMessageAt descending
-
+                let lastMessage = c.Messages
+    .OrderByDescending(x => x.CreatedAt)
+    .FirstOrDefault()
+                let unreadMessages = c.Messages.Count(x =>
+                    x.SenderId != query.UserId &&
+                    x.Status != ChatMessageStatus.Read &&
+                    x.Status != ChatMessageStatus.Deleted
+                )
+                let otherUserId = c.Members.Where(x => x.UserId != query.UserId).Select(x => x.UserId).FirstOrDefault()
+                join user in _context.Users.AsNoTracking()
+                on otherUserId equals user.Id
                 select new UserConversationResponse(
                     c.Id,
-                    u.Id,
-                    u.Username,
-                    c.LastMessagePreview ?? string.Empty,
+                    user.Id,
+                    user.Username,
+                    lastMessage.Content,
+                    unreadMessages,
+                    lastMessage.CreatedAt
 
-                    c.Messages.Count(m =>
-                        m.SenderId != query.UserId &&
-                        (currentMember.LastReadAt == null || m.CreatedAt > currentMember.LastReadAt)
-                    ),
-
-                    c.LastMessageAt
                 )
-            ).ToListAsync(cancellationToken);
+
+            ).ToListAsync();
+            // var conversations = await (
+            //     from c in _context.Conversations
+            //     where c.Members.Any(m => m.UserId == query.UserId)
+
+            //     let currentMember = c.Members.FirstOrDefault(m => m.UserId == query.UserId)
+
+            //     let otherUserId = c.Members
+            //        .Where(m => m.UserId != query.UserId)
+            //        .Select(m => m.UserId)
+            //        .FirstOrDefault()
+
+            //     join u in _context.Users on otherUserId equals u.Id
+
+            //     orderby c.LastMessageAt descending
+
+            //     select new UserConversationResponse(
+            //         c.Id,
+            //         u.Id,
+            //         u.Username,
+            //         c.LastMessagePreview ?? string.Empty,
+
+            //         c.Messages.Count(m =>
+            //             m.SenderId != query.UserId &&
+            //             (currentMember.LastReadAt == null || m.CreatedAt > currentMember.LastReadAt)
+            //         ),
+
+            //         c.LastMessageAt
+            //     )
+            // ).ToListAsync(cancellationToken);
 
             return HttpResult<IEnumerable<UserConversationResponse>>.Success(conversations);
         }
@@ -125,7 +153,7 @@ namespace Echo.Api.Features.Chat
                 return HttpResult<ChatMessageResponse>.Failure("Conversation Not Exist");
             }
 
-            var messageEntity = conversation.AddMessage(request.SenderId, request.Content);
+            var messageEntity = conversation.AddMessage(request.SenderId, request.Content, request.Status);
 
             await _context.SaveChangesAsync();
 
@@ -134,7 +162,7 @@ namespace Echo.Api.Features.Chat
                request.SenderId,
                request.ConversationId,
                 messageEntity.Content,
-                // true,
+                messageEntity.Status.ToString(),
                messageEntity.CreatedAt
             );
 
@@ -179,10 +207,11 @@ namespace Echo.Api.Features.Chat
                 m.SenderId,
                 query.ConversationId,
                    m.Content,
-                   
+                    m.Status.ToString(),
                     m.CreatedAt
                ))
                .ToListAsync();
+
 
             messages.Reverse();
 
@@ -226,20 +255,59 @@ namespace Echo.Api.Features.Chat
 
             return HttpResult<ConversationDetailsResponse>.Success(response);
         }
-        public async Task<HttpResult> MarkAsRead(Guid conversationId, Guid userId)
+
+        public async Task<HttpResult<Guid[]>> GetMessageIdsByStatus(
+            Guid userId,
+            ChatMessageStatus status,
+            Guid? ConversationId = null)
         {
-            var conversation = await _context.Conversations.Include(x => x.Members).Where(x => x.Id == conversationId).FirstOrDefaultAsync();
+            var query = _context.Conversations
+                .AsNoTracking()
+                .Where(c => c.Members.Any(m => m.UserId == userId));
+
+            if (ConversationId.HasValue)
+            {
+                query.Where(x => x.Id == ConversationId);
+            }
+
+            var messageIds = await query
+                .SelectMany(c => c.Messages)
+                .Where(m =>
+                    m.SenderId != userId &&
+                    m.Status == status)
+                .Select(m => m.Id)
+                .ToArrayAsync();
+
+            return HttpResult<Guid[]>.Success(messageIds);
+        }
+        public async Task<HttpResult<(Guid? senderId, Guid ConversationId, IReadOnlyCollection<Guid> messagesIds)>> MarkMessageAsByStatus(Guid[] messageIds, Guid? ConversationId, ChatMessageStatus status, Guid userId)
+        {
+            var conversationQuery = _context.Conversations
+                .Include(x => x.Messages)
+                .Include(x => x.Members)
+                .Where(x =>
+ x.Members.Any(x => x.UserId == userId)
+                 );
+            if (ConversationId != null)
+            {
+                conversationQuery = conversationQuery.Where(x => x.Id == ConversationId);
+            }
+            var conversation = await conversationQuery.FirstOrDefaultAsync();
 
             if (conversation == null)
             {
-                return HttpResult.Failure("Conversation Not Found");
+                return HttpResult<(Guid? senderId, Guid ConversationId, IReadOnlyCollection<Guid> messagesDelivered)>.Failure("Conversation Not Found");
             }
-
-            conversation.MarkAsRead(userId);
+            var messagesIds = conversation.MarkMessagesByStatus(messageIds, status);
 
             await _context.SaveChangesAsync();
+            var senderId = conversation.Members
+                .FirstOrDefault(x => x.UserId != userId)?.UserId;
 
-            return HttpResult.Success();
+            return HttpResult<(Guid? senderId, Guid ConversationId, IReadOnlyCollection<Guid> messagesDelivered)>
+                .Success((senderId, conversation.Id, messagesIds));
         }
+
+
     }
 }

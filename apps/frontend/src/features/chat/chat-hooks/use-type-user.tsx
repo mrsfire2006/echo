@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useRef } from "react";
-import { useSignalR } from "../components/providers/signalR-provider";
-
+import { useSignalR } from "../components/providers/signalR-provider/signalR-provider";
+ 
 export default function useTypeUser() {
     const { connection } = useSignalR();
 

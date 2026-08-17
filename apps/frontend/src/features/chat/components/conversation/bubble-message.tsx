@@ -6,10 +6,13 @@ import {
 } from "@/components/ui/bubble"
 import { formatMessageTime } from "@/constants"
 import { cn } from "@/lib/utils"
+import { Check, CheckCheck, CircleAlert, Loader2 } from "lucide-react";
+
+export type MessageStatus = "Failed" | "Sending" | "Sent" | "Read" | "Delivered"
 
 interface BubbleMessageProps {
     messageId?: string;
-    message: string;
+    message: { content: string, status: MessageStatus };
     messageTime: string;
     isSent: boolean;
 }
@@ -29,21 +32,48 @@ export function BubbleMessage({ message, isSent, messageTime }: BubbleMessagePro
 
 
                         <p className="text-sm leading-relaxed wrap-break-words whitespace-pre-wrap">
-                            {message}
+                            {message.content}
                         </p>
 
 
 
-                        <div className="flex flex-row justify-between">
-
-                            <span
-                                className={cn(
-                                    "text-[10px] select-none self-end opacity-75 dir-ltr",
-                                    isSent ? "text-chat-sent-foreground/80" : "text-muted-foreground"
+                        <div className="flex flex-row items-center justify-between gap-2">
+                            <div className="flex items-center gap-1">
+                                {isSent && (
+                                    <span
+                                        className={cn(
+                                            "inline-flex items-center select-none",
+                                            message.status === "Read"
+                                                ? "text-sky-400"
+                                                : "text-chat-sent-foreground/70"
+                                        )}
+                                    >
+                                        {message.status === "Sending" ? (
+                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                        ) : message.status === "Failed" ? (
+                                            <CircleAlert className="h-3 w-3 text-destructive" />
+                                        ) : message.status === "Sent" ? (
+                                            <Check className="h-3 w-3" />
+                                        ) : message.status === "Delivered" ? (
+                                            <CheckCheck className="h-3 w-3" />
+                                        ) : message.status === "Read" ? (
+                                            <CheckCheck className="h-3 w-3" />
+                                        ) : null}
+                                    </span>
                                 )}
-                            >
-                                {formatMessageTime(messageTime)}
-                            </span>
+
+                                <span
+                                    className={cn(
+                                        "text-[10px] select-none opacity-75 dir-ltr",
+                                        isSent
+                                            ? "text-chat-sent-foreground/80"
+                                            : "text-muted-foreground"
+                                    )}
+                                >
+                                    {formatMessageTime(messageTime)}
+                                </span>
+                            </div>
+
                             {isSent && (
                                 <span className="text-[11px] font-medium select-none text-chat-sent-foreground/70">
                                     You

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Echo.Api.Features.Chat.Domain.Enums;
 using Echo.Api.Shared.Common.Base;
 
 namespace Echo.Api.Features.Chat.Domain.Entities
@@ -40,28 +41,35 @@ namespace Echo.Api.Features.Chat.Domain.Entities
             var member = ConversationMember.Create(userId, Id);
             _members.Add(member);
         }
-
-        public void MarkAsRead(Guid userId)
+        public IReadOnlyCollection<Guid> MarkMessagesByStatus(Guid[] messageIds, ChatMessageStatus status)
         {
-            var member = _members.FirstOrDefault(m => m.UserId == userId);
-            if (member == null)
+            var ids = messageIds.ToHashSet();
+            var MessageIds = new List<Guid>();
+            foreach (var message in _messages)
             {
-                return;
+                if (!ids.Contains(message.Id))
+                    continue;
+
+                var messageId = message.MarkByStatus(status);
+
+                if (messageId.HasValue)
+                {
+                    MessageIds.Add(messageId.Value);
+                }
             }
 
-            if (LastMessageId.HasValue && LastMessageSenderId != userId)
-            {
-                member.MarkAsRead(LastMessageId.Value);
-            }
+            return MessageIds;
         }
-        public Message AddMessage(Guid senderId, string content)
+
+      
+        public Message AddMessage(Guid senderId, string content, ChatMessageStatus status)
         {
             var isMember = _members.Any(m => m.UserId == senderId);
 
 
 
 
-            var message = Message.Create(Id, senderId, content);
+            var message = Message.Create(Id, senderId, content, status);
             _messages.Add(message);
 
             LastMessagePreview = content.Length > 100 ? content[..100] : content;

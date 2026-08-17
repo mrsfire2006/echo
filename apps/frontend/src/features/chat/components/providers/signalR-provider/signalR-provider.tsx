@@ -1,37 +1,22 @@
-'use client';
+'use client'
+import { aspApiUrl } from "@/constants";
+import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-import { aspApiUrl, HttpResult } from '@/constants';
-import {
-    HubConnection,
-    HubConnectionBuilder,
-    LogLevel,
-} from '@microsoft/signalr';
-import { useQueryClient } from '@tanstack/react-query';
-import React, {
-    createContext,
-    useContext,
-    useEffect,
-    useState,
-} from 'react';
-import { ChatKeys } from '../../chat-keys';
 
-interface SignalRContextValue {
-    connection: HubConnection | null;
-    isConnected: boolean;
+interface signalRContextValue {
+    connection: HubConnection | null,
+    isConnected: boolean
 }
 
-const SignalRContext = createContext<SignalRContextValue | undefined>(
-    undefined
-);
+const SignalRContext = createContext<signalRContextValue | undefined>(undefined);
 
-export default function SignalRProvider({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+
+export default function SignalRProvider({ children }: { children: React.ReactNode }) {
     const [connection, setConnection] = useState<HubConnection | null>(null);
     const [isConnected, setIsConnected] = useState(false);
-    const queryClient = useQueryClient();
+
+
 
     useEffect(() => {
         let cancelled = false;
@@ -61,12 +46,8 @@ export default function SignalRProvider({
                 setIsConnected(false);
             }
         });
-        const handleConversationCreated = (result: HttpResult) => {
-            if (result.isSuccess) {
-                queryClient.invalidateQueries({ queryKey: ChatKeys.UserConversations})
-            }
-        }
-        newConnection.on("ConversationCreated", handleConversationCreated)
+
+
 
         setConnection(newConnection);
 
@@ -74,12 +55,10 @@ export default function SignalRProvider({
             cancelled = true;
 
             setIsConnected(false);
-            newConnection.off("ConversationCreated", handleConversationCreated)
             newConnection.stop().catch(() => { });
 
         };
     }, []);
-
     useEffect(() => {
         if (!connection) return;
 
@@ -115,8 +94,6 @@ export default function SignalRProvider({
             cancelled = true;
         };
     }, [connection]);
-
-
     useEffect(() => {
         const unlockAudio = () => {
             const a = new Audio("/sounds/notification.mp3");
@@ -128,26 +105,22 @@ export default function SignalRProvider({
         return () => document.removeEventListener("click", unlockAudio);
     }, []);
 
-    return (
-        <SignalRContext.Provider
-            value={{
-                connection,
-                isConnected,
-            }}
-        >
-            {children}
-        </SignalRContext.Provider>
-    );
+
+    return <SignalRContext.Provider value={{ connection, isConnected }}>
+        {children}
+    </SignalRContext.Provider>
+
+
+
 }
 
-export function useSignalR() {
+export const useSignalR = () => {
     const context = useContext(SignalRContext);
 
     if (!context) {
         throw new Error(
-            'useSignalR لازم يتستخدم جوّه SignalRProvider'
+            "useSignalR must be used inside SignalRProvider"
         );
     }
-
     return context;
 }

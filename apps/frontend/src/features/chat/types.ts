@@ -1,5 +1,6 @@
 import { ApiSchema } from "@/constants";
 import { paths } from "@/schemas/schema";
+import { MessageStatus } from "./components/conversation/bubble-message";
 
 export type UserConversationsResponse =
   ApiSchema["HttpResultOfIEnumerableOfUserConversationResponse"]["value"];
@@ -22,3 +23,8 @@ export type ConversationDetailsResponse =
 export type CreateConversationRequest =
   ApiSchema["GetOrCreateConversationRequest"];
 
+export type MessagesStatusResponse = {
+  messageIds: string[];
+  status: MessageStatus;
+  conversationId: string;
+};

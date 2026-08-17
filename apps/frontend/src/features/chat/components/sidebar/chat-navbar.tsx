@@ -7,24 +7,24 @@ import { usePathname } from "next/navigation";
 import { formatMessageTime } from "@/constants";
 import UserAvatar from "@/features/user/components/user-avatar";
 import { cn } from "@/lib/utils";
-import usePresence from "../providers/presence-provider";
 import { useCurrentConversation } from "../providers/current-conversation-provider";
-import { useTypingUsers } from "../providers/typing-provider";
 import UserTypingAvater from "@/features/user/components/user-typing-avatar";
+import { usePresence } from "../../chat-hooks/use-presence";
+import useTypingUsers from "../../chat-hooks/use-typing.users";
 
 
 
 
 export default function ChatNavbar() {
+    const pathname = usePathname();
     const { data: user } = useGetUserProfile();
     const { onlineUsers } = usePresence();
-    const pathname = usePathname();
     const { data: conversations, isPending } = useGetUserConversations(user?.value?.id ?? "");
     const { setCurrentConversation } = useCurrentConversation();
     const convs = conversations && conversations?.value?.sort((a, b) =>
         new Date(b.lastMessageTime!).getTime() - new Date(a.lastMessageTime!).getTime()
     );
-    const typingUsers = useTypingUsers();
+    const { typingUsers } = useTypingUsers();
     return (
         <nav className="min-h-0 flex-1  overflow-y-auto px-3 mt-3 scrollbar-thin [scrollbar-color:var(--border)_transparent]">
 
@@ -37,7 +37,7 @@ export default function ChatNavbar() {
                     const isTyping = typingUsers.includes(c.userId);
                     return <Link
                         onClick={() => {
-                            setCurrentConversation({ conversationId: c.conversationId, isOnline, otherUserId: c.userId, username: c.username })
+                            setCurrentConversation({ conversationId: c.conversationId, otherUserId: c.userId, username: c.username })
                         }}
                         data-selected={pathname.includes(c.conversationId)}
                         key={c.conversationId}

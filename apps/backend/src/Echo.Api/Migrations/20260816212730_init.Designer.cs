@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Echo.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260814005759_init")]
+    [Migration("20260816212730_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -86,12 +86,6 @@ namespace Echo.Api.Migrations
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastReadAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("LastReadMessageId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
@@ -124,9 +118,12 @@ namespace Echo.Api.Migrations
                     b.Property<Guid>("SenderId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ConversationId", "CreatedAt");
+                    b.HasIndex("ConversationId", "SenderId", "Status");
 
                     b.ToTable("Message");
                 });

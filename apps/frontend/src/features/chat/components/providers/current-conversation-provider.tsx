@@ -7,13 +7,12 @@ import React, {
     useMemo,
     useState,
 } from "react";
-import usePresence from "./presence-provider";
+import { usePresence } from "../../chat-hooks/use-presence";
 
 export interface CurrentConversation {
     conversationId: string;
     otherUserId: string;
     username: string;
-    isOnline: boolean;
 }
 
 interface CurrentConversationContextValue {
@@ -38,22 +37,6 @@ export function CurrentConversationProvider({
     const clearCurrentConversation = () => {
         setCurrentConversation(null);
     };
-    const { onlineUsers } = usePresence();
-    useEffect(() => {
-        if (!currentConversation) return;
-        if (onlineUsers.includes(currentConversation.otherUserId)) {
-            setCurrentConversation((prev) => {
-                return prev ? { ...prev, isOnline: true } : prev;
-            });
-        }
-        else {
-            setCurrentConversation((prev) => {
-                return prev ? { ...prev, isOnline: false } : prev;
-            });
-        }
-
-    }, [onlineUsers,currentConversation?.otherUserId])
-
 
     const value = useMemo(
         () => ({

@@ -204,41 +204,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/chat/conversations/direct/read/:{conversationId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    conversationId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/chat": {
         parameters: {
             query?: never;
@@ -526,6 +491,7 @@ export interface components {
             /** Format: uuid */
             conversationId: string;
             content: string;
+            status: string;
             /** Format: date-time */
             createdAt: string;
         };

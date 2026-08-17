@@ -4,7 +4,9 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Echo.Api.Features.Chat.ChatHubServices;
+using Echo.Api.Features.Chat.Domain.Enums;
 using Echo.Api.Features.Chat.Dtos.Requests;
+using Echo.Api.Features.Chat.Dtos.Responses;
 using Echo.Api.Features.Chat.Interfaces;
 using Echo.Api.Shared.Common;
 using Microsoft.AspNetCore.Authorization;
@@ -79,7 +81,16 @@ namespace Echo.Api.Features.Chat
                 return HttpResult.Failure("Unauthorized", StatusCodes.Status401Unauthorized);
             }
             request.SenderId = UserId;
+            var isUserOnline = _presenceTracker.IsUserOnline(request.ReceiverId.ToString());
+            if (isUserOnline)
+            {
+                request.Status = ChatMessageStatus.Delivered;
+            }
+            else
+            {
+                request.Status = ChatMessageStatus.Sent;
 
+            }
             var result = await _chatService.SaveMessageAsync(request);
 
             if (result.IsFailure)
@@ -114,6 +125,46 @@ namespace Echo.Api.Features.Chat
         {
             return await _presenceTracker.GetOnlineUsersAsync(usersIds.ToList());
         }
+
+        public async Task ConfirmMessagesByStatus(Guid[] messageIds, string status, Guid? ConversationId = null)
+        {
+            var userId = GetCurrentUserId();
+            if (!Enum.TryParse<ChatMessageStatus>(
+                   status,
+                   true,
+                   out var parsedStatus))
+            {
+                throw new HubException($"Invalid message status: {status}");
+            }
+            var result = await _chatService.MarkMessageAsByStatus(messageIds, ConversationId, parsedStatus, userId);
+
+            if (!result.IsSuccess)
+                return;
+            var (senderId, conversationId, ids) = result.Value;
+
+            if (!senderId.HasValue || ids.Count == 0)
+                return;
+            await Clients.User(senderId.Value.ToString())
+              .ReceiveMessagesStatus(new MessageStatusChanged(ids, status.ToString(), conversationId));
+
+        }
+
+
+        public async Task<Guid[]> GetMessageIdsByStatus(string status, Guid? ConversationId = null)
+        {
+            var userId = GetCurrentUserId();
+             if (!Enum.TryParse<ChatMessageStatus>(
+                   status,
+                   true,
+                   out var parsedStatus))
+            {
+                throw new HubException($"Invalid message status: {status}");
+            }
+            var result = await _chatService.GetMessageIdsByStatus(userId, parsedStatus, ConversationId);
+
+            return result.Value!;
+        }
+
         private Guid GetCurrentUserId()
         {
             var userIdStr = Context.UserIdentifier

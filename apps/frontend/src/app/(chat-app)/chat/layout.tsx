@@ -1,5 +1,6 @@
 "use client";
 
+import useMessageDelivered from "@/features/chat/chat-hooks/use-message-delivered";
 import ChatSidebar from "@/features/chat/components/sidebar/chat-sidebar";
 import { cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
@@ -11,6 +12,10 @@ export default function ChatLayout({
 }) {
     const params = useParams();
     const isConversationOpen = !!params.conversationId;
+
+
+    useMessageDelivered();
+
 
     return (
         <main className="flex h-dvh w-full overflow-hidden">

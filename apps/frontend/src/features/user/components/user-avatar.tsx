@@ -73,7 +73,7 @@ export default function UserAvatar({
     return (
         <Avatar className={cn("h-10 w-10 shrink-0 shadow-xs", className)}>
 
-            <AvatarBadge className={onLine ? "bg-green-500" : "bg-red-500"} />
+            {onLine && <AvatarBadge className={onLine ? "bg-green-500" : "bg-red-500"} />}
 
             <AvatarFallback
                 style={style}

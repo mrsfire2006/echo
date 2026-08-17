@@ -6,13 +6,9 @@ using Echo.Api.Features.Chat.Domain.Enums;
 
 namespace Echo.Api.Features.Chat.Dtos.Responses
 {
-
-    public record ChatMessageResponse(
-        Guid Id,
-        Guid SenderId,
-        Guid ConversationId,
-        string Content,
-         string Status,
-        DateTime CreatedAt
+    public sealed record MessageStatusChanged(
+        IReadOnlyCollection<Guid> MessageIds,
+        string Status,
+        Guid? ConversationId
     );
 }

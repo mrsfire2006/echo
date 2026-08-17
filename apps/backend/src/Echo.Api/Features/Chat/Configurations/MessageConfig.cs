@@ -27,7 +27,12 @@ namespace Echo.Api.Features.Chat.Configurations
             builder.Property(m => m.ConversationId)
                    .IsRequired();
 
-            builder.HasIndex(m => new { m.ConversationId, m.CreatedAt });
+            builder.HasIndex(m => new
+            {
+                m.ConversationId,
+                m.SenderId,
+                m.Status
+            });
         }
     }
 }

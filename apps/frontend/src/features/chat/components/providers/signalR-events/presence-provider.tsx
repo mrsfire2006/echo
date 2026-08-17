@@ -1,31 +1,37 @@
 'use client'
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { useSignalR } from "./signalR-provider";
 
-interface PresenceValue {
+import React, { useContext, useEffect, useState } from "react";
+import { createContext } from "react";
+import { useSignalR } from "../signalR-provider/signalR-provider";
+
+interface PresenceContextValue {
     onlineUsers: string[],
 
 }
 
-const PresenceContext = createContext<PresenceValue>({ onlineUsers: [] });
+export const PresenceContext = createContext<PresenceContextValue | undefined>(undefined);
 
 
-export function PresenceContextProvider({ children }: { children: React.ReactNode }) {
-    const { connection } = useSignalR();
+
+export default function PresenceProvider({ children }: { children: React.ReactNode }) {
+
     const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+    const { connection } = useSignalR();
 
     useEffect(() => {
         if (!connection) return;
+
+
         const handleUserOnline = (userId: string) => {
             setOnlineUsers((prev) => (prev.includes(userId) ? prev : [...prev, userId]));
         };
         const handleUserOffline = (userId: string) => {
             setOnlineUsers((prev) => prev.filter((id) => id !== userId));
         };
-        const handleInitialOnlineUsers = (userIds: string[]) => {
-            setOnlineUsers((prev) => Array.from(new Set([...prev, ...userIds])));
-        };
 
+        const handleInitialOnlineUsers = (userIds: string[]) => {
+            setOnlineUsers(userIds);
+        };
 
         connection.on("UserOnline", handleUserOnline);
         connection.on("UserOffline", handleUserOffline);
@@ -38,19 +44,12 @@ export function PresenceContextProvider({ children }: { children: React.ReactNod
                 handleInitialOnlineUsers
             );
         }
+
     }, [connection])
 
-
-
     return (
-        <PresenceContext.Provider value={{ onlineUsers }}>{children}</PresenceContext.Provider>
+        <PresenceContext.Provider value={{ onlineUsers }} >
+            {children}
+        </PresenceContext.Provider>
     )
-}
-
-
-export default function usePresence() {
-    const context = useContext(PresenceContext);
-
-    return context;
-
 }

@@ -3,12 +3,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import useMessage from "@/features/chat/chat-hooks/use-message";
+import { useMessage } from "@/features/chat/chat-hooks/use-message";
 import useTypeUser from "@/features/chat/chat-hooks/use-type-user";
-import { BubbleMessage } from "@/features/chat/components/conversation/bubble-message";
+import { BubbleMessage, MessageStatus } from "@/features/chat/components/conversation/bubble-message";
 import ConversationHeader from "@/features/chat/components/conversation/conversation-header";
 import { DoodleBackground } from "@/features/chat/components/conversation/doodle-background";
 import { useCurrentConversation } from "@/features/chat/components/providers/current-conversation-provider";
+import { useGetConversationMessages } from "@/features/chat/hooks";
 import { useGetUserProfile } from "@/features/user/hooks";
 import { Loader2, Send, Smile } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -26,6 +27,8 @@ export default function ConversationPage() {
     const topSentinelRef = useRef<HTMLDivElement | null>(null);
     const previousScrollHeightRef = useRef<number>(0);
     const isInitialLoad = useRef(true);
+    const isNearBottomRef = useRef(true);
+    const lastMessageIdRef = useRef<string | undefined>(undefined);
 
     const { currentConversation } = useCurrentConversation();
 
@@ -40,12 +43,11 @@ export default function ConversationPage() {
     }, [isValidId, router, currentConversation]);
 
     const {
-        messages: messagesPages,
-        sendMessage,
+        data: messagesPages,
         fetchNextPage,
         hasNextPage,
         isFetchingNextPage
-    } = useMessage({ conversationId });
+    } = useGetConversationMessages(conversationId);
 
     const { data: user } = useGetUserProfile();
     const [messageText, setMessageText] = useState("");
@@ -93,16 +95,52 @@ export default function ConversationPage() {
     }, [messages.length]);
 
     useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const handleScroll = () => {
+            const threshold = 150;
+            const distanceFromBottom =
+                container.scrollHeight - container.scrollTop - container.clientHeight;
+            isNearBottomRef.current = distanceFromBottom < threshold;
+        };
+
+        container.addEventListener("scroll", handleScroll);
+        return () => container.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    useEffect(() => {
         if (messages.length === 0) return;
 
         if (previousScrollHeightRef.current > 0) return;
 
         if (isInitialLoad.current) {
+            lastMessageIdRef.current = messages[messages.length - 1]?.id;
             scrollToBottom("auto");
             isInitialLoad.current = false;
+            return;
         }
     }, [messages.length]);
+
+    // ✅ لما توصل رسالة جديدة فعلية (مش pagination)، ننزل تحت لو المستخدم قريب من الآخر أو الرسالة رسالته هو
+    useEffect(() => {
+        if (messages.length === 0 || isInitialLoad.current) return;
+        if (previousScrollHeightRef.current > 0) return;
+
+        const lastMessage = messages[messages.length - 1];
+        if (!lastMessage?.id || lastMessage.id === lastMessageIdRef.current) return;
+
+        lastMessageIdRef.current = lastMessage.id;
+
+        const isOwnMessage = user?.value?.id === lastMessage.senderId;
+        if (isOwnMessage || isNearBottomRef.current) {
+            scrollToBottom("smooth");
+        }
+    }, [messages, user?.value?.id]);
+
     const { handleTyping } = useTypeUser();
+
+    const { sendMessage } = useMessage({ conversationId });
 
     return (
         <section className="p-3 h-full w-full flex flex-col overflow-hidden">
@@ -127,16 +165,18 @@ export default function ConversationPage() {
                     </div>
 
                     <div className="flex-1 space-y-3">
-                        {messages.map((m, index) => (
-                            <BubbleMessage
+                        {messages.map((m, index) => {
+                            const status = m.status as MessageStatus;
+                            return <BubbleMessage
                                 key={m?.id}
                                 isSent={user?.value?.id === m?.senderId}
-                                message={m?.content ?? "Message Deleted"}
+                                message={{ content: m?.content ?? "Message Deleted", status: status }}
                                 messageTime={m?.createdAt!}
                                 messageId={m?.id}
 
                             />
-                        ))}
+                        })
+                        }
                         <div ref={messagesEndRef} />
                     </div>
 
@@ -151,8 +191,6 @@ export default function ConversationPage() {
                                 conversationId
                             });
                             setMessageText("");
-
-                            setTimeout(() => scrollToBottom("smooth"), 50);
                         }}
                         className="pt-2 sticky bottom-0 z-10"
                     >

@@ -12,16 +12,15 @@ import Link from "next/link";
 
 import { useCurrentConversation } from "../providers/current-conversation-provider";
 import UserTypingAvater from "@/features/user/components/user-typing-avatar";
-import { useTypingUsers } from "../providers/typing-provider";
+import { usePresence } from "../../chat-hooks/use-presence";
+import useTypingUsers from "../../chat-hooks/use-typing.users";
 
 export default function ConversationHeader() {
     const { clearCurrentConversation, currentConversation } =
         useCurrentConversation();
-    const userTypings = useTypingUsers();
-    let isUserTyping = false;
-    if (currentConversation) {
-        isUserTyping = userTypings.includes(currentConversation?.otherUserId);
-    }
+    const { isOnline } = usePresence({ userId: currentConversation?.otherUserId });
+    const { isTyping } = useTypingUsers({ userId: currentConversation?.otherUserId });
+
     return (
         <header className="sticky top-0 z-10 w-full border-b border-border/60 bg-background/80 backdrop-blur-md transition-colors">
             {/* Main Header */}
@@ -43,7 +42,7 @@ export default function ConversationHeader() {
                     {/* User Info */}
                     <div className="flex min-w-0 cursor-pointer items-center gap-3">
                         <UserAvatar
-                            onLine={currentConversation?.isOnline}
+                            onLine={isOnline}
                             username={currentConversation?.username ?? "user"}
                             className="h-10 w-10 shrink-0"
                         />
@@ -55,19 +54,19 @@ export default function ConversationHeader() {
 
                             <div className="mt-0.5 flex items-center gap-1.5">
                                 <span
-                                    className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors ${currentConversation?.isOnline
+                                    className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors ${isOnline
                                         ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
                                         : "bg-muted text-muted-foreground"
                                         }`}
                                 >
                                     <span
-                                        className={`h-1.5 w-1.5 rounded-full ${currentConversation?.isOnline
+                                        className={`h-1.5 w-1.5 rounded-full ${isOnline
                                             ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.7)]"
                                             : "bg-muted-foreground/50"
                                             }`}
                                     />
 
-                                    {currentConversation?.isOnline
+                                    {isOnline
                                         ? "Online"
                                         : "Offline"}
                                 </span>
@@ -112,7 +111,7 @@ export default function ConversationHeader() {
 
             {/* Typing Indicator */}
             <UserTypingAvater
-                isTyping={isUserTyping}
+                isTyping={isTyping}
             />
         </header>
     );

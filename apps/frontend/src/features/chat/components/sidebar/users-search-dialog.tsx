@@ -15,13 +15,10 @@ import { SquarePen, Search, MessageSquare, Check, UserPlus2, X } from "lucide-re
 import { useCreateConversation } from "../../hooks"
 import { validate } from "uuid"
 import { useRouter } from "next/navigation"
-import { useGetUserProfile, useGetUsers } from "@/features/user/hooks"
+import { useGetUsers } from "@/features/user/hooks"
 import UserAvatar from "@/features/user/components/user-avatar"
-import { useQueryClient } from "@tanstack/react-query"
-import usePresence from "../providers/presence-provider"
 import { useCurrentConversation } from "../providers/current-conversation-provider"
-import { useIsUserOnline } from "../../chat-hooks/use-is-user-online"
-import useIsUsersOnline from "../../chat-hooks/use-is-users-online"
+import { usePresence } from "../../chat-hooks/use-presence"
 
 export default function UsersSearchDialog() {
     const [open, setOpen] = useState(false)
@@ -31,7 +28,7 @@ export default function UsersSearchDialog() {
     const { mutateAsync: CreatConversationAsync, isPending } = useCreateConversation();
     const [error, setError] = useState<string>("");
     const router = useRouter();
-    const { getUsersOnline } = useIsUsersOnline();
+    const { getOnlineUsers } = usePresence();
     const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 
 
@@ -50,7 +47,7 @@ export default function UsersSearchDialog() {
                 return;
             }
 
-            const result = await getUsersOnline(filterUsers);
+            const result = await getOnlineUsers(filterUsers);
 
             setOnlineUsers(result);
         };
@@ -80,7 +77,7 @@ export default function UsersSearchDialog() {
             setOpen(false)
             const isOnline = onlineUsers.includes(selectedUserId);
             const username = users?.value?.find(x => x.userId === selectedUserId)?.username;
-            setCurrentConversation({ conversationId: result.value, isOnline, otherUserId: selectedUserId, username: username! })
+            setCurrentConversation({ conversationId: result.value, otherUserId: selectedUserId, username: username! })
 
             router.push(`/chat/${result.value}`)
         }

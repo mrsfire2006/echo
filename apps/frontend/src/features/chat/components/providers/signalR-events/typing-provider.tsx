@@ -1,13 +1,12 @@
 'use client'
 import { createContext, useContext, useEffect, useState } from "react";
-import { useSignalR } from "./signalR-provider";
+import { useSignalR } from "../signalR-provider/signalR-provider";
 
+interface TypingContextValue {
+    typingUsers: string[]
+}
 
-
-const TypingContext = createContext<string[]>([]);
-
-
-
+export const TypingContext = createContext<TypingContextValue | undefined>(undefined);
 
 export default function TypingProvider({ children }: { children: React.ReactNode }) {
     const { connection } = useSignalR();
@@ -15,10 +14,10 @@ export default function TypingProvider({ children }: { children: React.ReactNode
 
     useEffect(() => {
         if (!connection) return;
-        const handleUserTyping = (userId:string) => {
+
+        const handleUserTyping = (userId: string) => {
             setTypingUsers((prev) => {
-                const current = prev ?? [];
-                return [...new Set([...current, userId])];
+                return prev.includes(userId) ? prev : [...prev, userId]
             })
         }
         const handleUserStopTyping = (userId: string) => {
@@ -38,14 +37,9 @@ export default function TypingProvider({ children }: { children: React.ReactNode
     }, [connection])
 
 
-    return (<TypingContext.Provider value={typingUsers}>{children}</TypingContext.Provider>)
+    return (<TypingContext.Provider value={{ typingUsers }}>{children}</TypingContext.Provider>)
 
 }
 
 
 
-export const useTypingUsers = () => {
-    const context = useContext(TypingContext);
-
-    return context;
-}
