@@ -4,10 +4,11 @@ import { MessageContext } from "../components/providers/signalR-events/message-p
 import { useSignalR } from "../components/providers/signalR-provider/signalR-provider";
 import { validate } from "uuid";
 import { InfiniteData, useQueryClient } from "@tanstack/react-query";
-import { ConversationMessagesResponse, MessagesStatusResponse, SingleConversationMessage } from "../types";
+import { ConversationMessagesResponse, MessagesStatusResponse, SingleConversationMessage, UserConversationsResponse } from "../types";
 import { ChatKeys } from "../chat-keys";
 import { playMessageSound } from "@/lib/sound";
 import { useGetUserProfile } from "@/features/user/hooks";
+import { HttpResult } from "@/constants";
 
 
 
@@ -100,12 +101,70 @@ export const useMessage = ({ conversationId }: { conversationId?: string }) => {
                     "Read",
                     conversationId
                 );
+                queryClient.setQueryData<
+                    HttpResult<UserConversationsResponse>
+                >(
+                    ChatKeys.UserConversations,
+                    (oldData) => {
+                        if (!oldData?.value) {
+                            return oldData;
+                        }
+
+                        return {
+                            ...oldData,
+                            value: oldData.value.map(conversation =>
+                                conversation.conversationId ===
+                                    newMessage.conversationId
+                                    ? {
+                                        ...conversation,
+                                        lastMessage: newMessage.content,
+                                        lastMessageTime: newMessage.createdAt,
+                                    }
+                                    : conversation
+                            ),
+                        };
+                    }
+                );
+
+
             } catch (error) {
                 console.error("Failed to confirm live message as read:", error);
             }
         },
-        [connection, isConnected, conversationId, currentUserId]
+        [connection, isConnected, conversationId, currentUserId, queryClient]
     );
+    const updateLastMessage = useCallback(
+        (newMessage: SingleConversationMessage) => {
+            queryClient.setQueryData<
+                HttpResult<UserConversationsResponse>
+            >(
+                ChatKeys.UserConversations,
+                (oldData) => {
+                    if (!oldData?.value) {
+                        return oldData;
+                    }
+
+                    return {
+                        ...oldData,
+                        value: oldData.value.map(conversation =>
+                            conversation.conversationId ===
+                                newMessage.conversationId
+                                ? {
+                                    ...conversation,
+                                    lastMessage: newMessage.content,
+                                    lastMessageTime: newMessage.createdAt,
+                                }
+                                : conversation
+                        ),
+                    };
+                }
+            );
+        },
+        [queryClient]
+    );
+
+
+
 
     const playSound = useCallback(
         (_newMessage: SingleConversationMessage) => {
@@ -122,16 +181,21 @@ export const useMessage = ({ conversationId }: { conversationId?: string }) => {
         const unsubscribePlaySound =
             subscribeToMessage(playSound);
         const unsubscribeSentUpdateStatus = subscribeToMessage(sentUpdateStatus)
+        const unsubscribeUpdateLastMessage =
+            subscribeToMessage(updateLastMessage);
+
         return () => {
             unsubscribeUpdateMessages();
             unsubscribePlaySound();
             unsubscribeSentUpdateStatus();
+            unsubscribeUpdateLastMessage();
         };
     }, [
         subscribeToMessage,
         updateMessages,
         playSound,
-        sentUpdateStatus
+        sentUpdateStatus,
+        updateLastMessage
     ]);
 
     const UpdateMessageStatus = useCallback(({ messageIds, status, conversationId }: MessagesStatusResponse) => {

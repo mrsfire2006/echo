@@ -18,6 +18,8 @@ export default function ChatAppNavbar() {
     const isChatDetails = pathname.startsWith('/chat/') && pathname !== '/chat/';
     const { mutateAsync: Logout } = useLogoutUserCommand();
     const router = useRouter();
+
+    // useReceiveMessage();
     return (
         <nav className={`
                 

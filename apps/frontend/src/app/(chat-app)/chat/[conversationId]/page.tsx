@@ -11,6 +11,7 @@ import { DoodleBackground } from "@/features/chat/components/conversation/doodle
 import { useCurrentConversation } from "@/features/chat/components/providers/current-conversation-provider";
 import { useGetConversationMessages } from "@/features/chat/hooks";
 import { useGetUserProfile } from "@/features/user/hooks";
+import EmojiPicker from "emoji-picker-react";
 import { Loader2, Send, Smile } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -29,6 +30,7 @@ export default function ConversationPage() {
     const isInitialLoad = useRef(true);
     const isNearBottomRef = useRef(true);
     const lastMessageIdRef = useRef<string | undefined>(undefined);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
     const { currentConversation } = useCurrentConversation();
 
@@ -191,11 +193,28 @@ export default function ConversationPage() {
                                 conversationId
                             });
                             setMessageText("");
+                            setShowEmojiPicker(false);
+
                         }}
                         className="pt-2 sticky bottom-0 z-10"
                     >
+                        {showEmojiPicker && (
+                            <div className="absolute bottom-full left-0 mb-2 z-50">
+                                <EmojiPicker
+                                    onEmojiClick={(emojiData) => {
+                                        setMessageText(
+                                            prev => prev + emojiData.emoji
+                                        );
+                                    }}
+                                />
+                            </div>
+                        )}
+
                         <div className="flex items-center gap-2 p-2 md:p-2.5 bg-background/80 backdrop-blur-md border rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-primary/50 transition-all">
                             <Button
+                                onClick={() =>
+                                    setShowEmojiPicker(prev => !prev)
+                                }
                                 type="button"
                                 variant="ghost"
                                 size="icon"
