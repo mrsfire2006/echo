@@ -67,14 +67,14 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 
 }
-else
-{
 
-}
 app.UseHttpsRedirection();
 
 app.UseRouting();
+
 app.UseCors("EchoClientPolicy");
+
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseWebSockets();

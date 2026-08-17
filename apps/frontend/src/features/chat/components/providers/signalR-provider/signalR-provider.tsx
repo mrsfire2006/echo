@@ -1,6 +1,9 @@
 'use client'
-import { aspApiUrl } from "@/constants";
+import { aspApiUrl, HttpResult } from "@/constants";
+import { ChatKeys } from "@/features/chat/chat-keys";
+import { UserConversationsResponse } from "@/features/chat/types";
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 
@@ -15,7 +18,7 @@ const SignalRContext = createContext<signalRContextValue | undefined>(undefined)
 export default function SignalRProvider({ children }: { children: React.ReactNode }) {
     const [connection, setConnection] = useState<HubConnection | null>(null);
     const [isConnected, setIsConnected] = useState(false);
-
+    const queryClient = useQueryClient();
 
 
     useEffect(() => {
@@ -47,12 +50,20 @@ export default function SignalRProvider({ children }: { children: React.ReactNod
             }
         });
 
+        const handleConversationCreated = (result: HttpResult) => {
+            if (result.isSuccess) {
 
+                queryClient.invalidateQueries({ queryKey: ChatKeys.UserConversations })
+            }
+
+        }
 
         setConnection(newConnection);
+        newConnection.on("ConversationCreated", handleConversationCreated);
 
         return () => {
             cancelled = true;
+            newConnection.off("ConversationCreated", handleConversationCreated);
 
             setIsConnected(false);
             newConnection.stop().catch(() => { });
